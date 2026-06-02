@@ -116,7 +116,32 @@ export async function afegeixControl(
     return { error: "No s'ha pogut desar el control: " + error.message };
   }
 
-  // Si hi ha valors fora de rang, avisa per correu tots els usuaris.
+  // Avisa TOTS els veïns que s'ha registrat un control nou, amb el nom de qui
+  // l'ha fet i els valors mesurats. Si hi ha valors fora de rang, ho afegim.
+  const { data: perfil } = await supabase
+    .from("profiles")
+    .select("full_name, email")
+    .eq("id", user.id)
+    .maybeSingle();
+  const nomVei =
+    perfil?.full_name?.trim() ||
+    perfil?.email?.split("@")[0] ||
+    "Un veí";
+
+  const phText = ph !== null ? String(ph) : "—";
+  const clorText = clor !== null ? String(clor) : "—";
+  let cosPush = `pH: ${phText} · Clor: ${clorText} mg/L`;
+  if (foraDeRang) cosPush += "\n⚠️ Valors fora de rang!";
+
+  const feines: Promise<unknown>[] = [
+    enviaPushATots({
+      title: `Nou control registrat per ${nomVei}!`,
+      body: cosPush,
+      url: "/dashboard",
+    }),
+  ];
+
+  // Si a més hi ha valors fora de rang, avisa per correu tots els usuaris.
   if (foraDeRang) {
     const { data: usuaris } = await supabase
       .from("profiles")
@@ -127,24 +152,16 @@ export async function afegeixControl(
       .map((u) => u.email as string)
       .filter(Boolean);
 
-    // Avisem en paral·lel per correu i per notificació push.
-    const resumProblemes = problemes
-      .map((p) => `${p.parametre}: ${p.valor}`)
-      .join(" · ");
-
-    await Promise.all([
+    feines.push(
       enviaAlertaForaDeRang(destinataris, {
         problemes,
         mesuratEl: measuredAt,
         notes,
       }),
-      enviaPushATots({
-        title: "⚠️ Aigua fora de rang",
-        body: `Valors fora del rang recomanat — ${resumProblemes}. Cal revisar la piscina.`,
-        url: "/dashboard",
-      }),
-    ]);
+    );
   }
+
+  await Promise.all(feines);
 
   revalidatePath("/dashboard");
   redirect("/dashboard?ok=1");

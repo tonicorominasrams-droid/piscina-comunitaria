@@ -14,7 +14,25 @@ function base64ToUint8Array(base64: string): Uint8Array<ArrayBuffer> {
   return arr;
 }
 
-type Estat = "carregant" | "no-suportat" | "activat" | "desactivat" | "denegat";
+type Estat =
+  | "carregant"
+  | "no-suportat"
+  | "activat"
+  | "desactivat"
+  | "denegat"
+  | "amagat";
+
+/** Clau de localStorage que recorda que l'usuari ja ha pres una decisió. */
+const CLAU_DECISIO = "push-banner-decidit";
+
+/** Recorda que l'usuari ja ha decidit (activat o descartat) i no torna a mostrar. */
+function recordaDecisio() {
+  try {
+    localStorage.setItem(CLAU_DECISIO, "1");
+  } catch {
+    // Si localStorage no està disponible, simplement no ho recordem.
+  }
+}
 
 export default function NotificacionsPush() {
   const [estat, setEstat] = useState<Estat>("carregant");
@@ -22,6 +40,18 @@ export default function NotificacionsPush() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Si l'usuari ja va acceptar o descartar el bàner, no el tornem a mostrar.
+    let decidit = false;
+    try {
+      decidit = localStorage.getItem(CLAU_DECISIO) === "1";
+    } catch {
+      decidit = false;
+    }
+    if (decidit) {
+      setEstat("amagat");
+      return;
+    }
+
     if (
       !CLAU_PUBLICA ||
       typeof window === "undefined" ||
@@ -67,7 +97,9 @@ export default function NotificacionsPush() {
       });
       if (!res.ok) throw new Error("desar");
 
-      setEstat("activat");
+      // L'usuari ha acceptat: amaga el bàner per sempre en aquest dispositiu.
+      recordaDecisio();
+      setEstat("amagat");
     } catch {
       setError("No s'han pogut activar les notificacions. Torna-ho a provar.");
       setEstat("desactivat");
@@ -98,8 +130,20 @@ export default function NotificacionsPush() {
     }
   }
 
-  // No mostrem res si el push no està configurat o no és compatible.
-  if (estat === "carregant" || estat === "no-suportat") return null;
+  // Descartar: l'usuari no vol decidir ara; amaguem el bàner per sempre.
+  function descarta() {
+    recordaDecisio();
+    setEstat("amagat");
+  }
+
+  // No mostrem res si el push no està configurat, no és compatible o ja s'ha
+  // pres una decisió (acceptat o descartat).
+  if (
+    estat === "carregant" ||
+    estat === "no-suportat" ||
+    estat === "amagat"
+  )
+    return null;
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
@@ -122,25 +166,38 @@ export default function NotificacionsPush() {
         </div>
       </div>
 
-      {estat === "activat" ? (
+      <div className="flex items-center gap-2">
+        {estat === "activat" ? (
+          <button
+            type="button"
+            onClick={desactiva}
+            disabled={ocupat}
+            className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 disabled:opacity-50"
+          >
+            {ocupat ? "…" : "Desactivar"}
+          </button>
+        ) : estat === "desactivat" ? (
+          <button
+            type="button"
+            onClick={activa}
+            disabled={ocupat}
+            className="rounded-lg bg-aigua-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-aigua-700 disabled:opacity-50"
+          >
+            {ocupat ? "Activant…" : "Activar"}
+          </button>
+        ) : null}
+
         <button
           type="button"
-          onClick={desactiva}
+          onClick={descarta}
           disabled={ocupat}
-          className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 disabled:opacity-50"
+          aria-label="Descartar i no tornar a mostrar"
+          title="No tornar a mostrar"
+          className="rounded-lg px-2 py-2 text-sm font-medium text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 disabled:opacity-50"
         >
-          {ocupat ? "…" : "Desactivar"}
+          ✕
         </button>
-      ) : estat === "desactivat" ? (
-        <button
-          type="button"
-          onClick={activa}
-          disabled={ocupat}
-          className="rounded-lg bg-aigua-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-aigua-700 disabled:opacity-50"
-        >
-          {ocupat ? "Activant…" : "Activar"}
-        </button>
-      ) : null}
+      </div>
     </div>
   );
 }
