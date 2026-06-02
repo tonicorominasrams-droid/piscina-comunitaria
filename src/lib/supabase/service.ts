@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { supabaseServiceRoleKey, supabaseUrl } from "./env";
 
 /**
  * Client de Supabase amb la clau de servei (service role).
@@ -8,14 +9,8 @@ import { createClient } from "@supabase/supabase-js";
  * secret). MAI s'ha d'exposar al navegador.
  */
 export function createServiceClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!url || !serviceKey) {
-    throw new Error(
-      "Falten NEXT_PUBLIC_SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY.",
-    );
-  }
+  const url = supabaseUrl();
+  const serviceKey = supabaseServiceRoleKey();
 
   return createClient(url, serviceKey, {
     auth: {

@@ -107,6 +107,24 @@ export async function iniciaSessioAmbContrasenya(
   });
 
   if (error) {
+    // Supabase retorna "invalid_credentials" (HTTP 400) quan el correu o la
+    // contrasenya no són correctes. Qualsevol altre codi (401/403/5xx) indica
+    // un problema de configuració o de connexió, no unes credencials dolentes.
+    const credencialsInvalides =
+      error.status === 400 || error.code === "invalid_credentials";
+
+    if (!credencialsInvalides) {
+      console.error("[login] Error inesperat de Supabase auth:", {
+        status: error.status,
+        code: error.code,
+        message: error.message,
+      });
+      return {
+        error:
+          "No s'ha pogut iniciar la sessió. Torna-ho a provar d'aquí una estona.",
+      };
+    }
+
     return { error: "Correu o contrasenya incorrectes." };
   }
 

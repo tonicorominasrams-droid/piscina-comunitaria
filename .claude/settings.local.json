@@ -9,7 +9,8 @@
       "PowerShell(Get-ChildItem -Recurse src -File | Select-Object FullName | ForEach-Object { $_.FullName.Replace\\(\"$PWD\\\\\",\"\"\\) }; Write-Output \"---PUBLIC---\"; if \\(Test-Path public\\) { Get-ChildItem -Recurse public -File } else { \"no public dir\" }; Write-Output \"---NEXTCONFIG---\"; Get-Content next.config.mjs -Raw)",
       "PowerShell(node scripts/generate-icons.mjs)",
       "Bash(npx tsc *)",
-      "Bash(npx next *)"
+      "Bash(npx next *)",
+      "Bash(sed -E 's/\\(KEY=|URL=\\).*/\\\\1<redacted-but-showing-line-endings-below>/')"
     ]
   }
 }
