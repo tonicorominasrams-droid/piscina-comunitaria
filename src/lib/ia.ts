@@ -7,9 +7,6 @@
  * està configurada, retorna un error controlat (no llança excepció).
  */
 
-/** Correu de l'únic usuari amb accés a la funció "Registre amb IA (beta)". */
-export const EMAIL_BETA_IA = "tonicorominasrams@gmail.com";
-
 const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
 const MODEL_IA = "claude-sonnet-4-20250514";
 

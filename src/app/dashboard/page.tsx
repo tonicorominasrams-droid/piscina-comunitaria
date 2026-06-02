@@ -2,7 +2,6 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { RANGS, phForaDeRang, clorForaDeRang } from "@/lib/ranges";
 import { opcioDepuradora, type EstatDepuradora } from "@/lib/depuradora";
-import { EMAIL_BETA_IA } from "@/lib/ia";
 import FabNouControl from "@/components/FabNouControl";
 
 type Control = {
@@ -47,8 +46,6 @@ export default async function DashboardPage(props: {
 
   // Mostrem només el primer nom per a una salutació més propera.
   const nom = (profile?.full_name || user?.email || "").split(" ")[0];
-  // Funció "Registre amb IA (beta)": exclusiva d'un únic usuari per correu.
-  const esBetaIa = user?.email?.toLowerCase() === EMAIL_BETA_IA;
 
   const { data: controls } = await supabase
     .from("controls")
@@ -85,10 +82,10 @@ export default async function DashboardPage(props: {
           </p>
         </div>
 
-        {esBetaIa && (
+        {user && (
           <Link
             href="/nou-control-ia"
-            className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-purple-600 to-aigua-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:from-purple-700 hover:to-aigua-700"
+            className="hidden items-center gap-2 rounded-lg bg-gradient-to-r from-purple-600 to-aigua-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:from-purple-700 hover:to-aigua-700 sm:inline-flex"
           >
             <span aria-hidden>✨</span>
             Registre amb IA

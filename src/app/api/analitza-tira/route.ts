@@ -1,10 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import {
-  EMAIL_BETA_IA,
-  analitzaTira,
-  esTipusImatgeAdmes,
-} from "@/lib/ia";
+import { analitzaTira, esTipusImatgeAdmes } from "@/lib/ia";
 
 // Depèn de la sessió de l'usuari i de la imatge enviada: mai estàtica.
 export const dynamic = "force-dynamic";
@@ -14,7 +10,7 @@ const MIDA_MAXIMA = 8 * 1024 * 1024;
 
 /**
  * Rep una imatge d'una tira reactiva i en retorna els valors de pH i clor
- * detectats per Claude. Restringida a l'únic usuari de la beta d'IA.
+ * detectats per Claude. Accessible a qualsevol usuari autenticat.
  */
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -22,8 +18,8 @@ export async function POST(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Comprovació estricta: només l'usuari de la beta hi té accés.
-  if (!user || user.email?.toLowerCase() !== EMAIL_BETA_IA) {
+  // Cal estar autenticat per fer servir la funció d'IA.
+  if (!user) {
     return NextResponse.json({ error: "No autoritzat." }, { status: 403 });
   }
 

@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { EMAIL_BETA_IA } from "@/lib/ia";
 import ControlIaClient from "./ControlIaClient";
 
 // Depèn de la sessió de l'usuari: mai s'ha de generar estàticament.
@@ -14,11 +13,6 @@ export default async function NouControlIaPage() {
   } = await supabase.auth.getUser();
 
   if (!user) redirect("/login");
-
-  // Accés exclusiu de l'usuari de la beta d'IA (cap altre usuari, ni admins).
-  if (user.email?.toLowerCase() !== EMAIL_BETA_IA) {
-    redirect("/dashboard");
-  }
 
   return (
     <div className="min-h-screen">
