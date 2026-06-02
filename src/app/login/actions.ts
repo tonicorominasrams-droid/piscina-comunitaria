@@ -47,6 +47,39 @@ export async function enviaEnllacMagic(
 }
 
 /**
+ * Envia un correu de recuperació de contrasenya. L'enllaç porta l'usuari, via
+ * /auth/confirm, fins a /reset-password per establir-hi una contrasenya nova.
+ */
+export async function enviaCorreuRecuperacio(
+  _prevState: EstatLogin,
+  formData: FormData,
+): Promise<EstatLogin> {
+  const email = String(formData.get("email") || "")
+    .trim()
+    .toLowerCase();
+
+  if (!email || !email.includes("@")) {
+    return { error: "Introdueix una adreça de correu vàlida." };
+  }
+
+  const supabase = await createClient();
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${siteUrl}/auth/confirm?next=/reset-password`,
+  });
+
+  if (error) {
+    return {
+      error:
+        "No s'ha pogut enviar el correu. Torna-ho a provar d'aquí una estona.",
+    };
+  }
+
+  return { ok: true };
+}
+
+/**
  * Inicia la sessió amb correu i contrasenya com a alternativa a l'enllaç màgic.
  */
 export async function iniciaSessioAmbContrasenya(
