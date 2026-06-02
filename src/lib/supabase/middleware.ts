@@ -45,6 +45,7 @@ export async function updateSession(request: NextRequest) {
   const esRutaPublica =
     path === "/" ||
     path.startsWith("/login") ||
+    path.startsWith("/registre") ||
     path.startsWith("/auth") ||
     path.startsWith("/error");
 

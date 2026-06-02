@@ -30,6 +30,21 @@ export default async function DashboardPage(props: {
   const searchParams = await props.searchParams;
   const supabase = await createClient();
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { data: profile } = user
+    ? await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", user.id)
+        .single()
+    : { data: null };
+
+  // Mostrem només el primer nom per a una salutació més propera.
+  const nom = (profile?.full_name || user?.email || "").split(" ")[0];
+
   const { data: controls } = await supabase
     .from("controls")
     .select(
@@ -45,6 +60,12 @@ export default async function DashboardPage(props: {
       {searchParams.ok && (
         <p className="rounded-lg bg-green-50 px-4 py-3 text-sm text-green-800 ring-1 ring-green-200">
           ✅ Control registrat correctament.
+        </p>
+      )}
+
+      {nom && (
+        <p className="text-base text-slate-600">
+          Hola, <span className="font-semibold text-slate-900">{nom}</span> 👋
         </p>
       )}
 

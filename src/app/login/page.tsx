@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import Link from "next/link";
 import {
   enviaCorreuRecuperacio,
   enviaEnllacMagic,
@@ -226,6 +227,16 @@ export default function LoginPage() {
                 </button>
               </form>
             )}
+
+            <p className="mt-5 border-t border-slate-100 pt-4 text-center text-sm text-slate-500">
+              Encara no tens compte?{" "}
+              <Link
+                href="/registre"
+                className="font-medium text-aigua-600 hover:text-aigua-700"
+              >
+                Registra&apos;t
+              </Link>
+            </p>
           </>
         )}
       </div>
