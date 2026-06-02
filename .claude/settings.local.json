@@ -11,7 +11,9 @@
       "Bash(npx tsc *)",
       "Bash(npx next *)",
       "Bash(sed -E 's/\\(KEY=|URL=\\).*/\\\\1<redacted-but-showing-line-endings-below>/')",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(npm install *)",
+      "Bash(node *)"
     ]
   }
 }

@@ -1,6 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { enviaRecordatoriControl } from "@/lib/email";
+import { enviaPushATots } from "@/lib/push";
+import { fraseAleatoria } from "@/lib/frases";
 
 // Aquesta ruta depèn de capçaleres i de l'estat de la base de dades: mai
 // s'ha de generar estàticament.
@@ -69,12 +71,25 @@ async function gestiona(request: NextRequest) {
     .map((u) => u.email as string)
     .filter(Boolean);
 
-  const resultat = await enviaRecordatoriControl(destinataris, DIES_LIMIT);
+  // Una frase divertida i diferent cada vegada, compartida entre el correu i
+  // la notificació push d'aquesta execució.
+  const frase = fraseAleatoria();
+
+  const [resultat, resultatPush] = await Promise.all([
+    enviaRecordatoriControl(destinataris, DIES_LIMIT, frase),
+    enviaPushATots({
+      title: "🏊 Recordatori de la piscina",
+      body: frase,
+      url: "/dashboard/nou",
+    }),
+  ]);
 
   return NextResponse.json({
     enviat: resultat.enviat,
     motiu: resultat.motiu,
     destinataris: destinataris.length,
+    push: resultatPush.enviades,
+    frase,
     diesSense: Number.isFinite(diesSense) ? Math.floor(diesSense) : null,
   });
 }

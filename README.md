@@ -64,6 +64,11 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 # Opcional (alertes per correu)
 RESEND_API_KEY=
 ALERT_FROM_EMAIL=Piscina Comunitària <onboarding@resend.dev>
+
+# Opcional (notificacions push) — genera-les amb scripts/generate-vapid.mjs
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=
+VAPID_PRIVATE_KEY=
+VAPID_SUBJECT=mailto:el-teu-correu@example.com
 ```
 
 > A Windows (PowerShell) pots fer servir: `Copy-Item .env.local.example .env.local`
@@ -116,6 +121,44 @@ Les alertes s'envien quan es registra un control amb el pH o el clor fora de ran
 > Si no configures `RESEND_API_KEY`, l'aplicació **funciona igualment**: només
 > registra l'avís a la consola del servidor en comptes d'enviar el correu.
 
+---
+
+## Notificacions push al mòbil (Web Push / VAPID)
+
+A més del correu, l'app pot enviar **notificacions push** al navegador o mòbil
+quan el pH o el clor surten de rang i als recordatoris automàtics.
+
+1. Genera un parell de claus VAPID (un sol cop):
+
+   ```bash
+   node scripts/generate-vapid.mjs
+   ```
+
+2. Copia la sortida a `.env.local` (i a Vercel en producció):
+
+   ```env
+   NEXT_PUBLIC_VAPID_PUBLIC_KEY=...
+   VAPID_PRIVATE_KEY=...
+   VAPID_SUBJECT=mailto:el-teu-correu@example.com
+   ```
+
+3. Aplica la migració [`supabase/migrations/0006_push_subscriptions.sql`](./supabase/migrations/0006_push_subscriptions.sql)
+   (taula on es desen les subscripcions dels navegadors).
+4. L'enviament des del servidor fa servir `SUPABASE_SERVICE_ROLE_KEY`: assegura't
+   que també està configurada.
+5. A l'app, cada usuari activa les notificacions des de la targeta **«🔔
+   Notificacions al mòbil»** del tauler (cal acceptar el permís del navegador).
+
+> Si no configures les claus VAPID, l'app **funciona igualment**: només no
+> enviarà notificacions push (les alertes per correu segueixen actives).
+
+### Recordatori automàtic
+
+La tasca diària de [`0004_cron_recordatori.sql`](./supabase/migrations/0004_cron_recordatori.sql)
+crida `/api/cron/reminder` a les 09:00. Si fa **4 dies o més** que no es
+registra cap control, envia un recordatori **per correu i per push** amb una
+**frase divertida diferent cada dia** (vegeu [`src/lib/frases.ts`](./src/lib/frases.ts)).
+
 ### Rangs recomanats
 
 Definits a [`src/lib/ranges.ts`](./src/lib/ranges.ts) (basats en el RD 742/2013):
@@ -146,8 +189,11 @@ piscina-comunitaria/
     ├── components/            # Components reutilitzables (botó de sortida…)
     └── lib/
         ├── supabase/          # Clients de Supabase (navegador, servidor, middleware)
-        ├── ranges.ts          # Rangs recomanats i validació
-        └── email.ts           # Enviament d'alertes (Resend)
+        ├── ranges.ts          # Rangs recomanats i validació (correcte/límit/fora)
+        ├── estat.ts           # Estat global de la piscina (semàfor verd/groc/vermell)
+        ├── frases.ts          # Frases divertides en català per als recordatoris
+        ├── push.ts            # Enviament de notificacions web push (VAPID)
+        └── email.ts           # Enviament d'alertes i recordatoris (Resend)
 ```
 
 ---

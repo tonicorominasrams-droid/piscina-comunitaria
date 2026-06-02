@@ -91,6 +91,7 @@ export async function enviaAlertaForaDeRang(
 export async function enviaRecordatoriControl(
   destinataris: string[],
   diesSenseControl = 4,
+  frase?: string,
 ): Promise<{ enviat: boolean; motiu?: string }> {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.ALERT_FROM_EMAIL || "onboarding@resend.dev";
@@ -109,12 +110,14 @@ export async function enviaRecordatoriControl(
     return { enviat: false, motiu: "RESEND_API_KEY no configurada." };
   }
 
-  const missatge = `Fa ${diesSenseControl} dies que no es registra cap control de la piscina. Recorda fer la revisió!`;
+  const dades = `Fa ${diesSenseControl} dies que no es registra cap control de la piscina. Recorda fer la revisió!`;
+  const missatge = frase || dades;
 
   const html = `
     <div style="font-family: Arial, Helvetica, sans-serif; color: #1f2937; max-width: 560px; margin: 0 auto;">
       <h2 style="color: #1369dc;">🏊 Recordatori de la piscina comunitària</h2>
-      <p>${missatge}</p>
+      <p style="font-size:17px;">${missatge}</p>
+      <p style="color:#6b7280;">${dades}</p>
       <p style="margin:24px 0;">
         <a href="${siteUrl}/dashboard"
            style="display:inline-block;background:#1682f0;color:#ffffff;text-decoration:none;padding:12px 20px;border-radius:8px;font-weight:bold;">

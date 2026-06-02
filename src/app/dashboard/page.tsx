@@ -7,7 +7,11 @@ import {
   descriuMeteo,
   recomanacioProperControl,
 } from "@/lib/meteo";
+import { calculaEstat } from "@/lib/estat";
 import FabNouControl from "@/components/FabNouControl";
+import SemaforEstat from "@/components/SemaforEstat";
+import CalendariControls from "@/components/CalendariControls";
+import NotificacionsPush from "@/components/NotificacionsPush";
 
 type Control = {
   id: string;
@@ -57,8 +61,8 @@ export default async function DashboardPage(props: {
         .single()
     : { data: null };
 
-  // Mostrem només el primer nom per a una salutació més propera.
-  const nom = (profile?.full_name || user?.email || "").split(" ")[0];
+  // Salutació amb el nom complet del perfil (i, si no n'hi ha, el correu).
+  const nom = profile?.full_name || user?.email || "";
 
   const { data: controls } = await supabase
     .from("controls")
@@ -76,6 +80,9 @@ export default async function DashboardPage(props: {
     llista.length > 0 ? new Date(llista[0].measured_at) : null;
   const recomanacio = recomanacioProperControl(ultimControl, meteoActual);
 
+  // Estat global de la piscina (semàfor) a partir de l'últim control.
+  const estat = calculaEstat(llista[0] ?? null);
+
   return (
     <div className="space-y-6">
       {searchParams.ok && (
@@ -89,6 +96,10 @@ export default async function DashboardPage(props: {
           Hola, <span className="font-semibold text-slate-900">{nom}</span> 👋
         </p>
       )}
+
+      <SemaforEstat estat={estat} />
+
+      <NotificacionsPush />
 
       <div
         className={`flex items-start gap-3 rounded-xl px-4 py-3 text-sm ring-1 ${COLORS_RECOMANACIO[recomanacio.to]}`}
@@ -126,6 +137,8 @@ export default async function DashboardPage(props: {
           </Link>
         )}
       </div>
+
+      <CalendariControls controls={llista} />
 
       {llista.length === 0 ? (
         <div className="rounded-xl border border-dashed border-slate-300 bg-white p-10 text-center text-slate-500">

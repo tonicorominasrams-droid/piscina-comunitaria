@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { comprovaRangs } from "@/lib/ranges";
 import { enviaAlertaForaDeRang } from "@/lib/email";
+import { enviaPushATots } from "@/lib/push";
 import { obteMeteoActual } from "@/lib/meteo";
 
 export type EstatControl = {
@@ -126,11 +127,23 @@ export async function afegeixControl(
       .map((u) => u.email as string)
       .filter(Boolean);
 
-    await enviaAlertaForaDeRang(destinataris, {
-      problemes,
-      mesuratEl: measuredAt,
-      notes,
-    });
+    // Avisem en paral·lel per correu i per notificació push.
+    const resumProblemes = problemes
+      .map((p) => `${p.parametre}: ${p.valor}`)
+      .join(" · ");
+
+    await Promise.all([
+      enviaAlertaForaDeRang(destinataris, {
+        problemes,
+        mesuratEl: measuredAt,
+        notes,
+      }),
+      enviaPushATots({
+        title: "⚠️ Aigua fora de rang",
+        body: `Valors fora del rang recomanat — ${resumProblemes}. Cal revisar la piscina.`,
+        url: "/dashboard",
+      }),
+    ]);
   }
 
   revalidatePath("/dashboard");

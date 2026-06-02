@@ -62,3 +62,43 @@ export function clorForaDeRang(clor: number | null): boolean {
   if (clor === null || Number.isNaN(clor)) return false;
   return clor < RANGS.clor.min || clor > RANGS.clor.max;
 }
+
+/** Nivell d'un valor respecte del seu rang recomanat. */
+export type NivellValor = "correcte" | "limit" | "fora";
+
+/**
+ * Fracció de l'amplada del rang que es considera "zona límit" a tocar de
+ * cada extrem. Amb 0.15, un valor dins del rang però molt a prop d'un extrem
+ * (al 15% interior) es marca com a límit (groc), no com a correcte.
+ */
+const MARGE_LIMIT = 0.15;
+
+/**
+ * Classifica un valor respecte d'un rang: correcte (ben centrat), límit (dins
+ * del rang però a tocar d'un extrem) o fora (per sota o per sobre del rang).
+ * Un valor nul o no numèric es considera "correcte" (no penalitza l'estat).
+ */
+export function nivellValor(
+  valor: number | null,
+  rang: { min: number; max: number },
+): NivellValor {
+  if (valor === null || Number.isNaN(valor)) return "correcte";
+  if (valor < rang.min || valor > rang.max) return "fora";
+  const marge = (rang.max - rang.min) * MARGE_LIMIT;
+  if (valor < rang.min + marge || valor > rang.max - marge) return "limit";
+  return "correcte";
+}
+
+/**
+ * Combina el nivell del pH i del clor en un de sol, agafant el més greu
+ * (fora > límit > correcte).
+ */
+export function nivellGlobal(
+  ph: number | null,
+  clor: number | null,
+): NivellValor {
+  const nivells = [nivellValor(ph, RANGS.ph), nivellValor(clor, RANGS.clor)];
+  if (nivells.includes("fora")) return "fora";
+  if (nivells.includes("limit")) return "limit";
+  return "correcte";
+}

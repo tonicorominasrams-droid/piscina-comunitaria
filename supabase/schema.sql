@@ -158,6 +158,49 @@ create policy "Només admins poden esborrar controls"
   to authenticated
   using (public.is_admin());
 
+-- ---------------------------------------------------------------------------
+-- Taula de subscripcions de notificacions web push (VAPID)
+-- ---------------------------------------------------------------------------
+create table if not exists public.push_subscriptions (
+  id         uuid primary key default gen_random_uuid(),
+  user_id    uuid references public.profiles(id) on delete cascade,
+  endpoint   text not null unique,
+  p256dh     text not null,
+  auth       text not null,
+  created_at timestamptz not null default now()
+);
+
+alter table public.push_subscriptions enable row level security;
+
+create index if not exists push_subscriptions_user_id_idx
+  on public.push_subscriptions (user_id);
+
+-- Cada usuari gestiona NOMÉS les seves pròpies subscripcions. L'enviament el
+-- fa el servidor amb la clau de servei (service role), que salta RLS.
+drop policy if exists "Veure les pròpies subscripcions push" on public.push_subscriptions;
+create policy "Veure les pròpies subscripcions push"
+  on public.push_subscriptions for select
+  to authenticated
+  using (auth.uid() = user_id);
+
+drop policy if exists "Inserir les pròpies subscripcions push" on public.push_subscriptions;
+create policy "Inserir les pròpies subscripcions push"
+  on public.push_subscriptions for insert
+  to authenticated
+  with check (auth.uid() = user_id);
+
+drop policy if exists "Actualitzar les pròpies subscripcions push" on public.push_subscriptions;
+create policy "Actualitzar les pròpies subscripcions push"
+  on public.push_subscriptions for update
+  to authenticated
+  using (auth.uid() = user_id);
+
+drop policy if exists "Esborrar les pròpies subscripcions push" on public.push_subscriptions;
+create policy "Esborrar les pròpies subscripcions push"
+  on public.push_subscriptions for delete
+  to authenticated
+  using (auth.uid() = user_id);
+
 -- ===========================================================================
 -- Com convertir un usuari en administrador:
 --   update public.profiles set role = 'admin' where email = 'admin@exemple.com';
