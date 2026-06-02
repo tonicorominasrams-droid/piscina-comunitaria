@@ -5,7 +5,7 @@
  * l'Estat espanyol). Pots ajustar-los segons la normativa de la teva zona.
  */
 export const RANGS = {
-  ph: { min: 7.2, max: 8.0, label: "pH", unitat: "" },
+  ph: { min: 7.2, max: 7.6, ideal: 7.4, label: "pH", unitat: "" },
   clor: { min: 0.5, max: 2.0, label: "Clor lliure", unitat: "mg/L" },
 } as const;
 

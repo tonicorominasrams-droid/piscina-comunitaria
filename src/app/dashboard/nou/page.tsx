@@ -15,7 +15,7 @@ export default async function NouControlPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Nou control</h1>
+        <h1 className="text-2xl font-bold text-slate-900">Registre humà</h1>
         <p className="text-sm text-slate-500">
           Registra els valors de pH, clor i aspiració de la piscina.
         </p>

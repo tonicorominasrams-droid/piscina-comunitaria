@@ -2,7 +2,7 @@ import Link from "next/link";
 
 /**
  * Botons d'acció flotants (FAB) per a mòbil. Agrupen, alineats a baix a la
- * dreta, l'accés al "Registre amb IA (beta)" i a un "Nou control". Només es
+ * dreta, l'accés al "Registre amb IA (beta)" i a un "Registre humà". Només es
  * mostren en pantalles petites; en tauleta i escriptori s'usen els enllaços de
  * la capçalera.
  */
@@ -25,7 +25,7 @@ export default function FabNouControl() {
       </Link>
       <Link
         href="/dashboard/nou"
-        aria-label="Nou control"
+        aria-label="Registre humà"
         className="flex items-center justify-center gap-2 rounded-full bg-aigua-600 px-5 py-4 text-base font-semibold text-white shadow-lg shadow-aigua-600/30 transition hover:bg-aigua-700 active:scale-95"
       >
         <svg
@@ -42,7 +42,7 @@ export default function FabNouControl() {
             strokeLinecap="round"
           />
         </svg>
-        Nou control
+        Registre humà
       </Link>
     </div>
   );

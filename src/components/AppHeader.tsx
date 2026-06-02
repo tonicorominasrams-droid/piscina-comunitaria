@@ -64,7 +64,7 @@ export default function AppHeader({ nomUsuari, esAdmin, actiu }: Props) {
             href="/dashboard/nou"
             className="flex items-center rounded-lg bg-aigua-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-aigua-700"
           >
-            + Nou control
+            + Registre humà
           </Link>
           <div className="hidden text-right md:block">
             <p className="text-sm font-medium text-slate-700">{nomUsuari}</p>
@@ -125,7 +125,7 @@ export default function AppHeader({ nomUsuari, esAdmin, actiu }: Props) {
               onClick={() => setObert(false)}
               className="flex items-center justify-center rounded-lg bg-aigua-600 px-3 py-2.5 text-sm font-semibold text-white transition hover:bg-aigua-700"
             >
-              + Nou control
+              + Registre humà
             </Link>
             <LogoutButton />
           </div>

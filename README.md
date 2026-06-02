@@ -104,7 +104,7 @@ Tots els usuaris nous són **veïns** per defecte. Per convertir algú en admini
    where email = 'admin@exemple.com';
    ```
 
-A partir d'aquí, aquest usuari veurà el botó **«+ Nou control»**.
+A partir d'aquí, aquest usuari veurà el botó **«+ Registre humà»**.
 
 ---
 
@@ -165,7 +165,7 @@ Definits a [`src/lib/ranges.ts`](./src/lib/ranges.ts) (basats en el RD 742/2013)
 
 | Paràmetre    | Mínim | Màxim |
 | ------------ | ----- | ----- |
-| pH           | 7,2   | 8,0   |
+| pH           | 7,2   | 7,6   |
 | Clor lliure  | 0,5   | 2,0 mg/L |
 
 Pots ajustar-los editant aquest fitxer.
