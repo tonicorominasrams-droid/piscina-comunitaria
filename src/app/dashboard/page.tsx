@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { RANGS, phForaDeRang, clorForaDeRang } from "@/lib/ranges";
 import { opcioDepuradora, type EstatDepuradora } from "@/lib/depuradora";
+import FabNouControl from "@/components/FabNouControl";
 
 type Control = {
   id: string;
@@ -37,13 +38,14 @@ export default async function DashboardPage(props: {
   const { data: profile } = user
     ? await supabase
         .from("profiles")
-        .select("full_name")
+        .select("full_name, role")
         .eq("id", user.id)
         .single()
     : { data: null };
 
   // Mostrem només el primer nom per a una salutació més propera.
   const nom = (profile?.full_name || user?.email || "").split(" ")[0];
+  const esAdmin = profile?.role === "admin";
 
   const { data: controls } = await supabase
     .from("controls")
@@ -188,6 +190,8 @@ export default async function DashboardPage(props: {
           </table>
         </div>
       )}
+
+      {esAdmin && <FabNouControl />}
     </div>
   );
 }

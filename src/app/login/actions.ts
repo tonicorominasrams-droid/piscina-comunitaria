@@ -9,44 +9,6 @@ export type EstatLogin = {
 };
 
 /**
- * Envia un enllaç màgic (magic link) a l'adreça de correu indicada.
- */
-export async function enviaEnllacMagic(
-  _prevState: EstatLogin,
-  formData: FormData,
-): Promise<EstatLogin> {
-  const email = String(formData.get("email") || "")
-    .trim()
-    .toLowerCase();
-
-  if (!email || !email.includes("@")) {
-    return { error: "Introdueix una adreça de correu vàlida." };
-  }
-
-  const supabase = await createClient();
-  const siteUrl =
-    process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-
-  const { error } = await supabase.auth.signInWithOtp({
-    email,
-    options: {
-      // Permet crear l'usuari automàticament el primer cop que entra.
-      shouldCreateUser: true,
-      emailRedirectTo: `${siteUrl}/auth/confirm?next=/dashboard`,
-    },
-  });
-
-  if (error) {
-    return {
-      error:
-        "No s'ha pogut enviar el correu. Torna-ho a provar d'aquí una estona.",
-    };
-  }
-
-  return { ok: true };
-}
-
-/**
  * Envia un correu de recuperació de contrasenya. L'enllaç porta l'usuari, via
  * /auth/confirm, fins a /reset-password per establir-hi una contrasenya nova.
  */
@@ -80,7 +42,7 @@ export async function enviaCorreuRecuperacio(
 }
 
 /**
- * Inicia la sessió amb correu i contrasenya com a alternativa a l'enllaç màgic.
+ * Inicia la sessió amb correu i contrasenya.
  */
 export async function iniciaSessioAmbContrasenya(
   _prevState: EstatLogin,
