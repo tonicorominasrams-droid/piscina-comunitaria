@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  @apply bg-slate-50 text-slate-800 antialiased;
+}
+
+@layer base {
+  /*
+   * Zona tàctil mínima de 44px per a elements interactius (recomanació
+   * d'accessibilitat mòbil). S'exclouen les caselles de selecció i els radios,
+   * que tenen una mida pròpia, i s'amplien per separat amb classes d'utilitat.
+   */
+  button,
+  [role="button"],
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    min-height: 44px;
+  }
+}

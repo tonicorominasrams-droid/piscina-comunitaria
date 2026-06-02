@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(npx tsc --noEmit)",
+      "PowerShell(\\(Get-Content package.json -Raw | ConvertFrom-Json\\).dependencies.recharts)",
+      "PowerShell(npm run *)",
+      "PowerShell(node --version; npx next --version)",
+      "PowerShell(Rename-Item *)",
+      "PowerShell(Get-ChildItem -Recurse src -File | Select-Object FullName | ForEach-Object { $_.FullName.Replace\\(\"$PWD\\\\\",\"\"\\) }; Write-Output \"---PUBLIC---\"; if \\(Test-Path public\\) { Get-ChildItem -Recurse public -File } else { \"no public dir\" }; Write-Output \"---NEXTCONFIG---\"; Get-Content next.config.mjs -Raw)",
+      "PowerShell(node scripts/generate-icons.mjs)"
+    ]
+  }
+}
