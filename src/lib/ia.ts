@@ -36,11 +36,13 @@ export function esTipusImatgeAdmes(tipus: string): tipus is TipusImatge {
   return (TIPUS_ADMESOS as readonly string[]).includes(tipus);
 }
 
-const PROMPT = `Ets un assistent expert en química de piscines. A la imatge hi ha una tira reactiva (test strip) per mesurar la qualitat de l'aigua d'una piscina.
+const PROMPT = `Ets un assistent expert en química de piscines. A la imatge hi ha DOS tubs de reactiu líquid fotografiats junts per mesurar la qualitat de l'aigua d'una piscina:
+- Un tub de color vermell/rosat per mesurar el pH.
+- Un tub de color groc per mesurar el clor lliure.
 
-Analitza els colors dels quadrats de la tira i compara'ls amb les escales de referència habituals d'aquestes tires per determinar:
-- El pH de l'aigua.
-- El clor lliure (free chlorine) en ppm (mg/L).
+Analitza la tonalitat del líquid de cada tub i compara-la amb les escales de referència habituals d'aquests reactius líquids per determinar:
+- El pH de l'aigua (a partir del tub vermell/rosat: com més intens el to rosat/vermell, més alt el pH).
+- El clor lliure (free chlorine) en ppm (mg/L) (a partir del tub groc: com més intens el groc, més alt el clor).
 
 Respon EXCLUSIVAMENT amb un objecte JSON vàlid, sense cap text addicional ni format markdown, amb aquesta estructura exacta:
 {"ph": number|null, "clor": number|null, "comentari": string}

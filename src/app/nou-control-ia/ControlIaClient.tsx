@@ -111,11 +111,12 @@ export default function ControlIaClient() {
         <div className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
           <div>
             <h2 className="text-lg font-semibold text-slate-900">
-              1. Fes una foto de la tira reactiva
+              1. Fes una foto dels dos tubs reactius
             </h2>
             <p className="mt-1 text-sm text-slate-500">
-              Fes una foto clara i ben il·luminada de la tira reactiva acabada
-              de submergir, amb els colors ben visibles.
+              Fes una foto amb els dos tubs junts: el tub vermell/rosat per al pH
+              i el tub groc per al clor. Assegura&apos;t que els colors siguin ben
+              visibles i la il·luminació sigui uniforme.
             </p>
           </div>
 

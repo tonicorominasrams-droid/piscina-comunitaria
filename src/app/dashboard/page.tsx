@@ -89,7 +89,7 @@ export default async function DashboardPage(props: {
         {esBetaIa && (
           <Link
             href="/nou-control-ia"
-            className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-purple-600 to-aigua-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:from-purple-700 hover:to-aigua-700"
+            className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-purple-600 to-aigua-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:from-purple-700 hover:to-aigua-700"
           >
             <span aria-hidden>✨</span>
             Registre amb IA
