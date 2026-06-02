@@ -11,7 +11,14 @@ import {
 
 const estatInicial: EstatControl = {};
 
-export default function FormulariControl() {
+type Props = {
+  /** Valor de pH amb què pre-omplir el formulari (p. ex. des de l'IA). */
+  phInicial?: number | null;
+  /** Valor de clor amb què pre-omplir el formulari (p. ex. des de l'IA). */
+  clorInicial?: number | null;
+};
+
+export default function FormulariControl({ phInicial, clorInicial }: Props = {}) {
   const [estat, formAction, pendent] = useActionState(
     afegeixControl,
     estatInicial,
@@ -63,6 +70,7 @@ export default function FormulariControl() {
             max="14"
             inputMode="decimal"
             placeholder="p. ex. 7,4"
+            defaultValue={phInicial ?? undefined}
             className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-aigua-500 focus:ring-2 focus:ring-aigua-200"
           />
         </div>
@@ -85,6 +93,7 @@ export default function FormulariControl() {
             min="0"
             inputMode="decimal"
             placeholder="p. ex. 1,2"
+            defaultValue={clorInicial ?? undefined}
             className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-aigua-500 focus:ring-2 focus:ring-aigua-200"
           />
         </div>

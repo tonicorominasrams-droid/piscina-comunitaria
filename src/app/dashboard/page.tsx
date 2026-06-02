@@ -1,6 +1,8 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { RANGS, phForaDeRang, clorForaDeRang } from "@/lib/ranges";
 import { opcioDepuradora, type EstatDepuradora } from "@/lib/depuradora";
+import { EMAIL_BETA_IA } from "@/lib/ia";
 import FabNouControl from "@/components/FabNouControl";
 
 type Control = {
@@ -46,6 +48,8 @@ export default async function DashboardPage(props: {
   // Mostrem només el primer nom per a una salutació més propera.
   const nom = (profile?.full_name || user?.email || "").split(" ")[0];
   const esAdmin = profile?.role === "admin";
+  // Funció "Registre amb IA (beta)": exclusiva d'un únic usuari per correu.
+  const esBetaIa = user?.email?.toLowerCase() === EMAIL_BETA_IA;
 
   const { data: controls } = await supabase
     .from("controls")
@@ -81,6 +85,19 @@ export default async function DashboardPage(props: {
             {RANGS.clor.min}–{RANGS.clor.max} {RANGS.clor.unitat}
           </p>
         </div>
+
+        {esBetaIa && (
+          <Link
+            href="/nou-control-ia"
+            className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-purple-600 to-aigua-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:from-purple-700 hover:to-aigua-700"
+          >
+            <span aria-hidden>✨</span>
+            Registre amb IA
+            <span className="inline-flex items-center rounded-full bg-white/20 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide">
+              Beta
+            </span>
+          </Link>
+        )}
       </div>
 
       {llista.length === 0 ? (
