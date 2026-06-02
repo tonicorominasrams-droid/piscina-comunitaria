@@ -47,7 +47,6 @@ export default async function DashboardPage(props: {
 
   // Mostrem només el primer nom per a una salutació més propera.
   const nom = (profile?.full_name || user?.email || "").split(" ")[0];
-  const esAdmin = profile?.role === "admin";
   // Funció "Registre amb IA (beta)": exclusiva d'un únic usuari per correu.
   const esBetaIa = user?.email?.toLowerCase() === EMAIL_BETA_IA;
 
@@ -208,7 +207,7 @@ export default async function DashboardPage(props: {
         </div>
       )}
 
-      {esAdmin && <FabNouControl />}
+      <FabNouControl />
     </div>
   );
 }

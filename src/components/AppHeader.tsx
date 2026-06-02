@@ -60,14 +60,12 @@ export default function AppHeader({ nomUsuari, esAdmin, actiu }: Props) {
 
         {/* Accions (tauleta i escriptori) */}
         <div className="hidden items-center gap-3 sm:flex">
-          {esAdmin && (
-            <Link
-              href="/dashboard/nou"
-              className="flex items-center rounded-lg bg-aigua-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-aigua-700"
-            >
-              + Nou control
-            </Link>
-          )}
+          <Link
+            href="/dashboard/nou"
+            className="flex items-center rounded-lg bg-aigua-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-aigua-700"
+          >
+            + Nou control
+          </Link>
           <div className="hidden text-right md:block">
             <p className="text-sm font-medium text-slate-700">{nomUsuari}</p>
             <p className="text-xs text-slate-400">
@@ -122,15 +120,13 @@ export default function AppHeader({ nomUsuari, esAdmin, actiu }: Props) {
                 {esAdmin ? "Administrador/a" : "Veí/Veïna"}
               </p>
             </div>
-            {esAdmin && (
-              <Link
-                href="/dashboard/nou"
-                onClick={() => setObert(false)}
-                className="flex items-center justify-center rounded-lg bg-aigua-600 px-3 py-2.5 text-sm font-semibold text-white transition hover:bg-aigua-700"
-              >
-                + Nou control
-              </Link>
-            )}
+            <Link
+              href="/dashboard/nou"
+              onClick={() => setObert(false)}
+              className="flex items-center justify-center rounded-lg bg-aigua-600 px-3 py-2.5 text-sm font-semibold text-white transition hover:bg-aigua-700"
+            >
+              + Nou control
+            </Link>
             <LogoutButton />
           </div>
         </div>

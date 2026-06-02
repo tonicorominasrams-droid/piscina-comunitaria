@@ -10,16 +10,7 @@ export default async function NouControlPage() {
 
   if (!user) redirect("/login");
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-
-  // Només els administradors poden accedir a aquesta pàgina.
-  if (profile?.role !== "admin") {
-    redirect("/dashboard");
-  }
+  // Qualsevol usuari autenticat pot registrar nous controls.
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">

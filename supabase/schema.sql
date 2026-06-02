@@ -132,12 +132,15 @@ create policy "Tothom autenticat pot veure els controls"
   to authenticated
   using (true);
 
--- Escriptura: només administradors.
+-- Inserció: qualsevol usuari autenticat pot registrar nous controls.
 drop policy if exists "Només admins poden inserir controls" on public.controls;
-create policy "Només admins poden inserir controls"
+drop policy if exists "Tothom autenticat pot inserir controls" on public.controls;
+create policy "Tothom autenticat pot inserir controls"
   on public.controls for insert
   to authenticated
-  with check (public.is_admin());
+  with check (true);
+
+-- Modificació i esborrat: només administradors.
 
 drop policy if exists "Només admins poden modificar controls" on public.controls;
 create policy "Només admins poden modificar controls"

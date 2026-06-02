@@ -43,16 +43,8 @@ export async function afegeixControl(
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  // Comprovació de rol (a més de la protecció per RLS a la base de dades).
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-
-  if (profile?.role !== "admin") {
-    return { error: "Només els administradors poden registrar controls." };
-  }
+  // Qualsevol usuari autenticat pot registrar controls (a més de la
+  // protecció per RLS a la base de dades).
 
   const ph = aNumero(formData.get("ph"));
   const clor = aNumero(formData.get("clor"));
