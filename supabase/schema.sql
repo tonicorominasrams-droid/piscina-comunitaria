@@ -86,6 +86,8 @@ create table if not exists public.controls (
   clor_afegit       boolean not null default false,
   aigua_omplerta    boolean not null default false,
   estat_depuradora  text check (estat_depuradora in ('blanc', 'verd', 'groc', 'vermell')),
+  temperatura       numeric(4, 1),
+  codi_meteo        integer,
   notes             text,
   fora_de_rang      boolean not null default false,
   created_by        uuid references public.profiles(id),
@@ -100,7 +102,9 @@ alter table public.controls
   add column if not exists ph_corregit       boolean not null default false,
   add column if not exists clor_afegit       boolean not null default false,
   add column if not exists aigua_omplerta    boolean not null default false,
-  add column if not exists estat_depuradora  text;
+  add column if not exists estat_depuradora  text,
+  add column if not exists temperatura       numeric(4, 1),
+  add column if not exists codi_meteo        integer;
 
 do $$
 begin

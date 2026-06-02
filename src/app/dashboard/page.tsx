@@ -2,6 +2,11 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { RANGS, phForaDeRang, clorForaDeRang } from "@/lib/ranges";
 import { opcioDepuradora, type EstatDepuradora } from "@/lib/depuradora";
+import {
+  obteMeteoActual,
+  descriuMeteo,
+  recomanacioProperControl,
+} from "@/lib/meteo";
 import FabNouControl from "@/components/FabNouControl";
 
 type Control = {
@@ -15,9 +20,17 @@ type Control = {
   clor_afegit: boolean;
   aigua_omplerta: boolean;
   estat_depuradora: EstatDepuradora | null;
+  temperatura: number | null;
+  codi_meteo: number | null;
   notes: string | null;
   fora_de_rang: boolean;
 };
+
+const COLORS_RECOMANACIO = {
+  bo: "bg-green-50 text-green-800 ring-green-200",
+  avis: "bg-amber-50 text-amber-800 ring-amber-200",
+  urgent: "bg-aigua-50 text-aigua-800 ring-aigua-100",
+} as const;
 
 function formataData(iso: string) {
   return new Intl.DateTimeFormat("ca-ES", {
@@ -50,12 +63,18 @@ export default async function DashboardPage(props: {
   const { data: controls } = await supabase
     .from("controls")
     .select(
-      "id, measured_at, ph, clor, aspiracio, pastilles_skimmer, ph_corregit, clor_afegit, aigua_omplerta, estat_depuradora, notes, fora_de_rang",
+      "id, measured_at, ph, clor, aspiracio, pastilles_skimmer, ph_corregit, clor_afegit, aigua_omplerta, estat_depuradora, temperatura, codi_meteo, notes, fora_de_rang",
     )
     .order("measured_at", { ascending: false })
     .limit(200);
 
   const llista = (controls ?? []) as Control[];
+
+  // Meteorologia actual + recomanació intel·ligent per al proper control.
+  const meteoActual = await obteMeteoActual();
+  const ultimControl =
+    llista.length > 0 ? new Date(llista[0].measured_at) : null;
+  const recomanacio = recomanacioProperControl(ultimControl, meteoActual);
 
   return (
     <div className="space-y-6">
@@ -70,6 +89,18 @@ export default async function DashboardPage(props: {
           Hola, <span className="font-semibold text-slate-900">{nom}</span> 👋
         </p>
       )}
+
+      <div
+        className={`flex items-start gap-3 rounded-xl px-4 py-3 text-sm ring-1 ${COLORS_RECOMANACIO[recomanacio.to]}`}
+      >
+        <span className="text-xl leading-none" aria-hidden>
+          {meteoActual ? descriuMeteo(meteoActual.codi).icona : "💧"}
+        </span>
+        <div>
+          <p className="font-semibold">Recomanació</p>
+          <p>{recomanacio.missatge}</p>
+        </div>
+      </div>
 
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
@@ -102,10 +133,11 @@ export default async function DashboardPage(props: {
         </div>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
-          <table className="w-full min-w-[720px] text-left text-sm">
+          <table className="w-full min-w-[820px] text-left text-sm">
             <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
               <tr>
                 <th className="px-4 py-3">Data</th>
+                <th className="px-4 py-3">Temps</th>
                 <th className="px-4 py-3">pH</th>
                 <th className="px-4 py-3">Clor (mg/L)</th>
                 <th className="px-4 py-3">Accions</th>
@@ -119,6 +151,28 @@ export default async function DashboardPage(props: {
                 <tr key={c.id} className="hover:bg-slate-50">
                   <td className="whitespace-nowrap px-4 py-3 text-slate-700">
                     {formataData(c.measured_at)}
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-3 text-slate-700">
+                    {c.codi_meteo !== null || c.temperatura !== null ? (
+                      (() => {
+                        const desc = descriuMeteo(c.codi_meteo);
+                        return (
+                          <span
+                            className="inline-flex items-center gap-1.5"
+                            title={desc.etiqueta}
+                          >
+                            <span className="text-base" aria-hidden>
+                              {desc.icona}
+                            </span>
+                            {c.temperatura !== null && (
+                              <span>{Math.round(c.temperatura)} °C</span>
+                            )}
+                          </span>
+                        );
+                      })()
+                    ) : (
+                      <span className="text-slate-400">—</span>
+                    )}
                   </td>
                   <td
                     className={`px-4 py-3 font-medium ${

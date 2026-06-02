@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { comprovaRangs } from "@/lib/ranges";
 import { enviaAlertaForaDeRang } from "@/lib/email";
+import { obteMeteoActual } from "@/lib/meteo";
 
 export type EstatControl = {
   error?: string;
@@ -89,6 +90,10 @@ export async function afegeixControl(
   const problemes = comprovaRangs(ph, clor);
   const foraDeRang = problemes.length > 0;
 
+  // Obté la meteorologia actual de Castellar del Vallès. Si l'API no respon,
+  // desem el control igualment amb el temps buit (mai bloquegem el registre).
+  const meteo = await obteMeteoActual();
+
   const { error } = await supabase.from("controls").insert({
     measured_at: measuredAt.toISOString(),
     ph,
@@ -99,6 +104,8 @@ export async function afegeixControl(
     clor_afegit: clorAfegit,
     aigua_omplerta: aiguaOmplerta,
     estat_depuradora: estatDepuradora,
+    temperatura: meteo?.temperatura ?? null,
+    codi_meteo: meteo?.codi ?? null,
     notes,
     fora_de_rang: foraDeRang,
     created_by: user.id,
