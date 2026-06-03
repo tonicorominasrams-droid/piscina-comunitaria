@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import { comprovaRangs } from "@/lib/ranges";
 import { enviaAlertaForaDeRang } from "@/lib/email";
 import { enviaPushATots } from "@/lib/push";
@@ -116,52 +117,78 @@ export async function afegeixControl(
     return { error: "No s'ha pogut desar el control: " + error.message };
   }
 
-  // Avisa TOTS els veïns que s'ha registrat un control nou, amb el nom de qui
-  // l'ha fet i els valors mesurats. Si hi ha valors fora de rang, ho afegim.
-  const { data: perfil } = await supabase
-    .from("profiles")
-    .select("full_name, email")
-    .eq("id", user.id)
-    .maybeSingle();
-  const nomVei =
-    perfil?.full_name?.trim() ||
-    perfil?.email?.split("@")[0] ||
-    "Un veí";
-
-  const phText = ph !== null ? String(ph) : "—";
-  const clorText = clor !== null ? String(clor) : "—";
-  let cosPush = `pH: ${phText} · Clor: ${clorText} mg/L`;
-  if (foraDeRang) cosPush += "\n⚠️ Valors fora de rang!";
-
-  const feines: Promise<unknown>[] = [
-    enviaPushATots({
-      title: `Nou control registrat per ${nomVei}!`,
-      body: cosPush,
-      url: "/dashboard",
-    }),
-  ];
-
-  // Si a més hi ha valors fora de rang, avisa per correu tots els usuaris.
-  if (foraDeRang) {
-    const { data: usuaris } = await supabase
-      .from("profiles")
-      .select("email")
-      .not("email", "is", null);
-
-    const destinataris = (usuaris ?? [])
-      .map((u) => u.email as string)
-      .filter(Boolean);
-
-    feines.push(
-      enviaAlertaForaDeRang(destinataris, {
-        problemes,
-        mesuratEl: measuredAt,
-        notes,
-      }),
+  // Avisa TOTS els veïns que s'ha registrat un control nou. Cal el client de
+  // servei (service role) perquè, per RLS, un veí només pot llegir el SEU
+  // perfil i les SEVES subscripcions: amb el client normal no arribaríem mai
+  // a la resta de veïns. El client de servei salta l'RLS i les llegeix totes.
+  //
+  // El nom de qui registra sí que el podem llegir amb el client normal (és el
+  // seu propi perfil), però fem servir el de servei per uniformitat i perquè
+  // no depengui de l'estat de la sessió.
+  let serviceClient: ReturnType<typeof createServiceClient> | null = null;
+  try {
+    serviceClient = createServiceClient();
+  } catch (err) {
+    console.warn(
+      "[control] SUPABASE_SERVICE_ROLE_KEY no configurada: no s'enviaran " +
+        "notificacions ni correus als veïns.",
+      err,
     );
   }
 
-  await Promise.all(feines);
+  if (serviceClient) {
+    const { data: perfil } = await serviceClient
+      .from("profiles")
+      .select("full_name, email")
+      .eq("id", user.id)
+      .maybeSingle();
+    const nomVei =
+      perfil?.full_name?.trim() ||
+      perfil?.email?.split("@")[0] ||
+      user.email?.split("@")[0] ||
+      "Un veí";
+
+    const phText = ph !== null ? String(ph) : "—";
+    const clorText = clor !== null ? String(clor) : "—";
+    let cosPush = `pH: ${phText} · Clor: ${clorText} mg/L`;
+    if (foraDeRang) cosPush += "\n⚠️ Valors fora de rang!";
+
+    const feines: Promise<unknown>[] = [
+      enviaPushATots({
+        title: `Nou control registrat per ${nomVei}!`,
+        body: cosPush,
+        url: "/dashboard",
+      }),
+    ];
+
+    // Si a més hi ha valors fora de rang, avisa per correu tots els usuaris.
+    if (foraDeRang) {
+      const { data: usuaris } = await serviceClient
+        .from("profiles")
+        .select("email")
+        .not("email", "is", null);
+
+      const destinataris = (usuaris ?? [])
+        .map((u) => u.email as string)
+        .filter(Boolean);
+
+      feines.push(
+        enviaAlertaForaDeRang(destinataris, {
+          problemes,
+          mesuratEl: measuredAt,
+          notes,
+        }),
+      );
+    }
+
+    // Esperem els enviaments però no bloquegem mai el registre si fallen.
+    const resultats = await Promise.allSettled(feines);
+    for (const r of resultats) {
+      if (r.status === "rejected") {
+        console.error("[control] Error enviant una notificació:", r.reason);
+      }
+    }
+  }
 
   revalidatePath("/dashboard");
   redirect("/dashboard?ok=1");

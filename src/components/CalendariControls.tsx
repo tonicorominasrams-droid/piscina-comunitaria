@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { phForaDeRang, clorForaDeRang } from "@/lib/ranges";
 import { opcioDepuradora, type EstatDepuradora } from "@/lib/depuradora";
 import { descriuMeteo } from "@/lib/meteo";
+import { clauDiaCET, ZONA } from "@/lib/temps";
 
 export type ControlCalendari = {
   id: string;
@@ -39,12 +40,9 @@ const NOMS_MESOS = [
   "des.",
 ];
 
-/** Clau local d'un dia (YYYY-MM-DD) a partir d'una data. */
+/** Clau d'un dia (YYYY-MM-DD) en hora de Madrid (CET/CEST). */
 function clauDia(d: Date): string {
-  const any = d.getFullYear();
-  const mes = String(d.getMonth() + 1).padStart(2, "0");
-  const dia = String(d.getDate()).padStart(2, "0");
-  return `${any}-${mes}-${dia}`;
+  return clauDiaCET(d);
 }
 
 /** Índex de dia de la setmana amb dilluns = 0 ... diumenge = 6. */
@@ -53,9 +51,10 @@ function indexDilluns(d: Date): number {
 }
 
 function formataHora(iso: string): string {
-  return new Intl.DateTimeFormat("ca-ES", { timeStyle: "short" }).format(
-    new Date(iso),
-  );
+  return new Intl.DateTimeFormat("ca-ES", {
+    timeStyle: "short",
+    timeZone: ZONA,
+  }).format(new Date(iso));
 }
 
 function formataDiaLlarg(d: Date): string {
@@ -63,6 +62,7 @@ function formataDiaLlarg(d: Date): string {
     weekday: "long",
     day: "numeric",
     month: "long",
+    timeZone: ZONA,
   }).format(d);
 }
 

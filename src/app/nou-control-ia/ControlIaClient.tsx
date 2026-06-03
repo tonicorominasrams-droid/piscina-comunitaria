@@ -58,6 +58,19 @@ export default function ControlIaClient() {
         return;
       }
 
+      // Si la foto no és prou clara, no endevinem valors: demanem una de nova.
+      if (data.llegible === false) {
+        setError(
+          (data.comentari
+            ? `${data.comentari} `
+            : "La foto no és prou clara per llegir els tubs reactius. ") +
+            "Fes una altra foto amb bona llum, els dos tubs ben enfocats i els colors ben visibles.",
+        );
+        setPrevisualitzacio(null);
+        setFase("captura");
+        return;
+      }
+
       const det: Deteccio = {
         ph: data.ph ?? null,
         clor: data.clor ?? null,

@@ -9,22 +9,30 @@
  * de mica en mica i tornar a mesurar.
  */
 
+import { RANGS } from "./ranges";
+
 /** Volum de la piscina en metres cúbics. */
 export const VOLUM_PISCINA_M3 = 30;
 
-/** pH objectiu (punt mitjà del rang de treball 7,2–7,6). */
-export const PH_OBJECTIU = 7.4;
+/**
+ * Els llindars de decisió surten dels mateixos rangs oficials que fa servir el
+ * semàfor (RANGS), perquè la recomanació de dosatge MAI contradigui l'estat de
+ * la piscina: si un valor és "dins de rang" no es proposarà cap correcció.
+ */
 
-/** Llindars de decisió per al pH (segons l'especificació). */
-export const PH_MIN = 7.2;
-export const PH_MAX = 7.6;
+/** pH objectiu (punt ideal del rang de treball). */
+export const PH_OBJECTIU = RANGS.ph.ideal;
 
-/** Clor lliure objectiu en ppm (mg/L). */
-export const CLOR_OBJECTIU = 1.5;
+/** Llindars de decisió per al pH. */
+export const PH_MIN = RANGS.ph.min;
+export const PH_MAX = RANGS.ph.max;
+
+/** Clor lliure objectiu en ppm (mg/L), punt mitjà del rang recomanat. */
+export const CLOR_OBJECTIU = (RANGS.clor.min + RANGS.clor.max) / 2;
 
 /** Llindars de decisió per al clor lliure (ppm). */
-export const CLOR_MIN = 1.0;
-export const CLOR_MAX = 3.0;
+export const CLOR_MIN = RANGS.clor.min;
+export const CLOR_MAX = RANGS.clor.max;
 
 /**
  * Producte líquid de pH (pujador "pH+" o baixador "pH-"):

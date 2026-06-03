@@ -98,28 +98,28 @@ export type Recomanacio = {
   to: "bo" | "avis" | "urgent";
 };
 
-/** Nombre de dies a partir dels quals convé fer una revisió. */
-const DIES_RECOMANATS = 3;
-
-const MS_PER_DIA = 1000 * 60 * 60 * 24;
-
 /**
- * Genera una recomanació intel·ligent sobre quan fer el proper control,
- * combinant els dies des de l'últim control amb la meteorologia actual.
+ * Genera la recomanació sobre el proper control, COHERENT amb el semàfor.
+ *
+ * La recomanació es deriva del MATEIX estat que el semàfor (mateix color i el
+ * mateix motiu), de manera que mai es contradiuen: si el semàfor és vermell, la
+ * recomanació és urgent; si és verd, no demana res urgent. La meteorologia
+ * només afegeix context (si és bon moment o no per sortir a fer la revisió).
  *
  * @param ultimControl Data de l'últim control (null si no n'hi ha cap).
  * @param meteo        Meteorologia actual (null si no s'ha pogut obtenir).
- * @param ara          Moment actual (per defecte, ara mateix).
+ * @param estat        Estat (semàfor) ja calculat de la piscina.
  */
 export function recomanacioProperControl(
   ultimControl: Date | null,
   meteo: Meteo | null,
-  ara: Date = new Date(),
+  estat: { color: "verd" | "groc" | "vermell"; foraDeRang: boolean },
 ): Recomanacio {
   const desc = meteo ? descriuMeteo(meteo.codi) : null;
   const fragmentTemps = meteo
     ? `avui ${desc!.bonTemps ? "fa bon temps" : "fa mal temps"} (${desc!.etiqueta.toLowerCase()}, ${Math.round(meteo.temperatura)} °C)`
     : null;
+  const fapBonTemps = desc?.bonTemps ?? false;
 
   if (!ultimControl) {
     return {
@@ -130,55 +130,44 @@ export function recomanacioProperControl(
     };
   }
 
-  const dies = Math.floor((ara.getTime() - ultimControl.getTime()) / MS_PER_DIA);
-
-  const fragmentDies =
-    dies <= 0
-      ? "L'últim control s'ha fet avui"
-      : dies === 1
-        ? "Fa 1 dia de l'últim control"
-        : `Fa ${dies} dies de l'últim control`;
-
-  const toca = dies >= DIES_RECOMANATS;
-  const fapBonTemps = desc?.bonTemps ?? false;
-
-  // Cas ideal: toca revisió i fa bon temps.
-  if (toca && fapBonTemps) {
+  // 🔴 Vermell: valors fora de rang o fa massa dies de la revisió.
+  if (estat.color === "vermell") {
+    if (estat.foraDeRang) {
+      return {
+        missatge:
+          "Els valors de l'última lectura estan fora de rang. Corregeix l'aigua i torna a mesurar com abans millor.",
+        to: "urgent",
+      };
+    }
     return {
-      missatge: `${fragmentDies} i ${fragmentTemps}, és un bon moment per fer la revisió!`,
+      missatge: meteo
+        ? `Fa massa dies de l'últim control. ${capitalitza(fragmentTemps!)}; fes la revisió com abans millor.`
+        : "Fa massa dies de l'últim control. Fes la revisió com abans millor.",
       to: "urgent",
     };
   }
 
-  // Toca revisió però el temps no acompanya.
-  if (toca && meteo && !fapBonTemps) {
+  // 🟡 Groc: comença a fer dies o algun valor a tocar del límit.
+  if (estat.color === "groc") {
     return {
-      missatge: `${fragmentDies}. ${capitalitza(fragmentTemps!)}, però convindria fer la revisió tan aviat com es pugui.`,
+      missatge: meteo
+        ? `Convé fer una ullada aviat. ${capitalitza(fragmentTemps!)}${fapBonTemps ? ", és un bon moment per revisar-ho." : "."}`
+        : "Convé fer una ullada a la piscina aviat.",
       to: "avis",
     };
   }
 
-  // Toca revisió i no tenim dades del temps.
-  if (toca) {
-    return {
-      missatge: `${fragmentDies}, ja toca fer-ne una de nova.`,
-      to: "avis",
-    };
-  }
-
-  // Encara no toca, però fa bon dia: bon moment per avançar-la.
+  // 🟢 Verd: tot al dia. La meteo només suggereix si vols avançar la revisió.
   if (fapBonTemps) {
     return {
-      missatge: `${fragmentDies} i ${fragmentTemps}. Tot està al dia, però si vols pots aprofitar per fer una ullada.`,
+      missatge: `Tot està al dia i ${fragmentTemps}. Si vols, pots aprofitar per fer una ullada.`,
       to: "bo",
     };
   }
-
-  // Encara no toca.
   return {
     missatge: meteo
-      ? `${fragmentDies} i ${fragmentTemps}. Tot està al dia, no cal fer res de moment.`
-      : `${fragmentDies}. Tot està al dia, no cal fer res de moment.`,
+      ? `Tot està al dia i ${fragmentTemps}. No cal fer res de moment.`
+      : "Tot està al dia. No cal fer res de moment.",
     to: "bo",
   };
 }

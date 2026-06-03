@@ -16,6 +16,11 @@ export type ResultatAnalisi = {
   clor: number | null;
   /** Comentari curt del model sobre la lectura (qualitat, dubtes, etc.). */
   comentari?: string;
+  /**
+   * False si la foto NO és prou clara per llegir els tubs amb fiabilitat.
+   * En aquest cas cal demanar a l'usuari que en faci una de nova.
+   */
+  llegible?: boolean;
   error?: string;
 };
 
@@ -41,13 +46,20 @@ Analitza la tonalitat del líquid de cada tub i compara-la amb les escales de re
 - El pH de l'aigua (a partir del tub vermell/rosat: com més intens el to rosat/vermell, més alt el pH).
 - El clor lliure (free chlorine) en ppm (mg/L) (a partir del tub groc: com més intens el groc, més alt el clor).
 
+IMPORTANT — qualitat de la imatge: NO inventis mai els valors. Si la foto és
+borrosa, fosca, sobreexposada, els tubs no es veuen bé, els colors no es
+distingeixen o no hi ha tubs reactius a la imatge, marca-la com NO llegible i
+deixa "ph" i "clor" a null. Només dona valors numèrics quan puguis llegir els
+colors amb fiabilitat raonable.
+
 Respon EXCLUSIVAMENT amb un objecte JSON vàlid, sense cap text addicional ni format markdown, amb aquesta estructura exacta:
-{"ph": number|null, "clor": number|null, "comentari": string}
+{"llegible": boolean, "ph": number|null, "clor": number|null, "comentari": string}
 
 On:
+- "llegible": true només si la foto és prou clara per llegir els tubs amb fiabilitat; false si cal repetir la foto.
 - "ph": el valor de pH detectat (per exemple 7.4) o null si no es pot determinar.
 - "clor": el clor lliure en ppm (per exemple 1.2) o null si no es pot determinar.
-- "comentari": una frase breu en català sobre la fiabilitat de la lectura.`;
+- "comentari": una frase breu en català. Si no és llegible, explica què falla i demana una foto més clara (millor llum, enfocament i els dos tubs ben visibles).`;
 
 type ContingutResposta = { type: string; text?: string };
 
@@ -149,7 +161,7 @@ export async function analitzaTira(
         .trim() ?? "";
 
     const json = extreuJson(text) as
-      | { ph?: unknown; clor?: unknown; comentari?: unknown }
+      | { llegible?: unknown; ph?: unknown; clor?: unknown; comentari?: unknown }
       | null;
 
     if (!json) {
@@ -162,10 +174,22 @@ export async function analitzaTira(
       };
     }
 
+    const ph = aNumero(json.ph);
+    const clor = aNumero(json.clor);
+    // Considerem la foto no llegible si el model ho diu explícitament o si no
+    // ha pogut extreure cap dels dos valors.
+    const llegible =
+      json.llegible === false
+        ? false
+        : json.llegible === true
+          ? true
+          : ph !== null || clor !== null;
+
     return {
       ok: true,
-      ph: aNumero(json.ph),
-      clor: aNumero(json.clor),
+      ph,
+      clor,
+      llegible,
       comentari:
         typeof json.comentari === "string" ? json.comentari : undefined,
     };

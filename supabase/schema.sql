@@ -60,11 +60,14 @@ create trigger on_auth_user_created
   for each row execute function public.handle_new_user();
 
 -- Polítiques RLS de "profiles"
+-- Lectura: qualsevol usuari autenticat pot veure els perfils de la resta de
+-- veïns (cal per mostrar QUI ha registrat cada control a l'històric).
 drop policy if exists "Veure el propi perfil o, si ets admin, tots" on public.profiles;
-create policy "Veure el propi perfil o, si ets admin, tots"
+drop policy if exists "Qualsevol autenticat pot veure els perfils" on public.profiles;
+create policy "Qualsevol autenticat pot veure els perfils"
   on public.profiles for select
   to authenticated
-  using (auth.uid() = id or public.is_admin());
+  using (true);
 
 drop policy if exists "Actualitzar el propi perfil" on public.profiles;
 create policy "Actualitzar el propi perfil"

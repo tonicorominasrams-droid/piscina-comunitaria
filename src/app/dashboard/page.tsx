@@ -8,6 +8,8 @@ import {
   recomanacioProperControl,
 } from "@/lib/meteo";
 import { calculaEstat } from "@/lib/estat";
+import { comprovaRangs } from "@/lib/ranges";
+import { ZONA } from "@/lib/temps";
 import FabNouControl from "@/components/FabNouControl";
 import SemaforEstat from "@/components/SemaforEstat";
 import CalendariControls from "@/components/CalendariControls";
@@ -28,6 +30,8 @@ type Control = {
   codi_meteo: number | null;
   notes: string | null;
   fora_de_rang: boolean;
+  created_by: string | null;
+  autor: { full_name: string | null; email: string | null } | null;
 };
 
 const COLORS_RECOMANACIO = {
@@ -40,7 +44,17 @@ function formataData(iso: string) {
   return new Intl.DateTimeFormat("ca-ES", {
     dateStyle: "medium",
     timeStyle: "short",
+    timeZone: ZONA,
   }).format(new Date(iso));
+}
+
+/** Nom visible de qui ha fet un control (nom complet o, si no, part del correu). */
+function nomAutor(autor: Control["autor"]): string {
+  const nom = autor?.full_name?.trim();
+  if (nom) return nom;
+  const correu = autor?.email?.trim();
+  if (correu) return correu.split("@")[0];
+  return "—";
 }
 
 export default async function DashboardPage(props: {
@@ -67,28 +81,30 @@ export default async function DashboardPage(props: {
   const { data: controls } = await supabase
     .from("controls")
     .select(
-      "id, measured_at, ph, clor, aspiracio, pastilles_skimmer, ph_corregit, clor_afegit, aigua_omplerta, estat_depuradora, temperatura, codi_meteo, notes, fora_de_rang",
+      "id, measured_at, ph, clor, aspiracio, pastilles_skimmer, ph_corregit, clor_afegit, aigua_omplerta, estat_depuradora, temperatura, codi_meteo, notes, fora_de_rang, created_by, autor:profiles!created_by(full_name, email)",
     )
     .order("measured_at", { ascending: false })
     .limit(200);
 
-  const llista = (controls ?? []) as Control[];
-
-  // Meteorologia actual + recomanació intel·ligent per al proper control.
-  const meteoActual = await obteMeteoActual();
-  const ultimControl =
-    llista.length > 0 ? new Date(llista[0].measured_at) : null;
-  const recomanacio = recomanacioProperControl(ultimControl, meteoActual);
+  const llista = (controls ?? []) as unknown as Control[];
 
   // Estat global de la piscina (semàfor) a partir de l'últim control.
-  const estat = calculaEstat(llista[0] ?? null);
+  const ultim = llista[0] ?? null;
+  const estat = calculaEstat(ultim);
+
+  // Meteorologia actual + recomanació intel·ligent per al proper control,
+  // coherent amb el semàfor (si hi ha valors fora de rang, prioritza corregir).
+  const meteoActual = await obteMeteoActual();
+  const ultimControl = ultim ? new Date(ultim.measured_at) : null;
+  const recomanacio = recomanacioProperControl(ultimControl, meteoActual, {
+    color: estat.color,
+    foraDeRang: ultim?.fora_de_rang ?? false,
+  });
 
   return (
     <div className="space-y-6">
-      {searchParams.ok && (
-        <p className="rounded-lg bg-green-50 px-4 py-3 text-sm text-green-800 ring-1 ring-green-200">
-          ✅ Control registrat correctament.
-        </p>
+      {searchParams.ok && ultim && (
+        <ConfirmacioControl control={ultim} />
       )}
 
       {nom && (
@@ -150,6 +166,7 @@ export default async function DashboardPage(props: {
             <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
               <tr>
                 <th className="px-4 py-3">Data</th>
+                <th className="px-4 py-3">Qui</th>
                 <th className="px-4 py-3">Temps</th>
                 <th className="px-4 py-3">pH</th>
                 <th className="px-4 py-3">Clor (mg/L)</th>
@@ -164,6 +181,9 @@ export default async function DashboardPage(props: {
                 <tr key={c.id} className="hover:bg-slate-50">
                   <td className="whitespace-nowrap px-4 py-3 text-slate-700">
                     {formataData(c.measured_at)}
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-3 text-slate-700">
+                    {nomAutor(c.autor)}
                   </td>
                   <td className="whitespace-nowrap px-4 py-3 text-slate-700">
                     {c.codi_meteo !== null || c.temperatura !== null ? (
@@ -272,6 +292,80 @@ export default async function DashboardPage(props: {
       )}
 
       <FabNouControl />
+    </div>
+  );
+}
+
+/** Resum clar del control acabat de registrar (es mostra amb ?ok=1). */
+function ConfirmacioControl({ control: c }: { control: Control }) {
+  const problemes = comprovaRangs(c.ph, c.clor);
+  const foraDeRang = problemes.length > 0;
+
+  const accions = [
+    c.pastilles_skimmer > 0 &&
+      `${c.pastilles_skimmer} ${
+        c.pastilles_skimmer === 1 ? "pastilla" : "pastilles"
+      } a l'skimer`,
+    c.ph_corregit && "pH corregit",
+    c.clor_afegit && "Clor líquid o pols",
+    c.aigua_omplerta && "Aigua afegida",
+    c.aspiracio && "Neteja fons",
+  ].filter(Boolean) as string[];
+
+  const opcio = opcioDepuradora(c.estat_depuradora);
+
+  return (
+    <div className="rounded-xl bg-green-50 px-4 py-4 ring-1 ring-green-200">
+      <p className="text-sm font-semibold text-green-800">
+        ✅ Control registrat correctament
+      </p>
+      <p className="mt-0.5 text-xs text-green-700">
+        {formataData(c.measured_at)} · {nomAutor(c.autor)}
+      </p>
+
+      <dl className="mt-3 grid gap-x-6 gap-y-1 text-sm text-slate-700 sm:grid-cols-2">
+        <div className="flex justify-between gap-2 sm:block">
+          <dt className="text-slate-500">pH</dt>
+          <dd className="font-medium">{c.ph ?? "—"}</dd>
+        </div>
+        <div className="flex justify-between gap-2 sm:block">
+          <dt className="text-slate-500">Clor lliure</dt>
+          <dd className="font-medium">
+            {c.clor !== null ? `${c.clor} mg/L` : "—"}
+          </dd>
+        </div>
+        {opcio && (
+          <div className="flex justify-between gap-2 sm:block">
+            <dt className="text-slate-500">Depuradora</dt>
+            <dd className="font-medium">{opcio.etiqueta}</dd>
+          </div>
+        )}
+      </dl>
+
+      {accions.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-1">
+          {accions.map((a) => (
+            <span
+              key={a}
+              className="inline-flex items-center rounded-full bg-white px-2 py-0.5 text-xs font-medium text-green-700 ring-1 ring-green-200"
+            >
+              ✓ {a}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {c.notes && <p className="mt-2 text-sm text-slate-600">📝 {c.notes}</p>}
+
+      <p
+        className={`mt-3 text-sm font-medium ${
+          foraDeRang ? "text-red-700" : "text-green-700"
+        }`}
+      >
+        {foraDeRang
+          ? "⚠️ Atenció: hi ha valors fora de rang. S'ha avisat els veïns."
+          : "Tots els valors mesurats són dins de rang."}
+      </p>
     </div>
   );
 }

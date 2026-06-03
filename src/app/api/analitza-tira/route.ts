@@ -72,6 +72,7 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json({
+    llegible: resultat.llegible ?? true,
     ph: resultat.ph,
     clor: resultat.clor,
     comentari: resultat.comentari ?? null,

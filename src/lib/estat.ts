@@ -1,17 +1,21 @@
 /**
  * Estat global de la piscina representat amb un semàfor (verd, groc, vermell).
  *
- * Combina dos criteris:
- *   · La recència de l'últim control (dies des de l'última revisió).
+ * Combina dos criteris, sempre calculats en hora de Madrid (CET/CEST):
+ *   · La recència de l'últim control.
  *   · El nivell dels valors de l'últim control (correctes, límit o fora de rang).
  *
- * Regles (la pitjor de les dues mana):
- *   🟢 Verd    → últim control recent (≤ 2 dies) i tots els valors correctes.
- *   🟡 Groc    → últim control fa més de 2 dies O valors a tocar del límit.
- *   🔴 Vermell → últim control fa més de 4 dies O valors fora de rang.
+ * Regles (la pitjor de les dues mana), segons l'especificació:
+ *   🟢 Verd    → tots els valors dins de rang I últim control fa ≤ 24 hores.
+ *   🟡 Groc    → últim control fa entre 1 i 4 dies O algun valor a tocar del límit.
+ *   🔴 Vermell → últim control fa més de 4 dies O algun valor fora de rang.
+ *
+ * El color i el missatge deriven SEMPRE del mateix càlcul, de manera que la
+ * recomanació que es mostra mai contradiu el color del semàfor.
  */
 
 import { nivellGlobal } from "./ranges";
+import { diesCalendariCET, fragmentDiesCET, horesEntre } from "./temps";
 
 export type ColorSemafor = "verd" | "groc" | "vermell";
 
@@ -20,14 +24,13 @@ export type EstatPiscina = {
   emoji: string;
   titol: string;
   missatge: string;
-  /** Dies sencers des de l'últim control (null si no n'hi ha cap). */
+  /** Dies de calendari (CET) des de l'últim control (null si no n'hi ha cap). */
   diesSense: number | null;
 };
 
-const MS_PER_DIA = 1000 * 60 * 60 * 24;
-
-/** Dies a partir dels quals l'estat passa a groc i a vermell. */
-const DIES_GROC = 2;
+/** Hores a partir de les quals deixa de ser "recent" (semàfor verd). */
+const HORES_VERD = 24;
+/** Dies a partir dels quals l'estat passa a vermell. */
 const DIES_VERMELL = 4;
 
 type UltimControl = {
@@ -57,17 +60,11 @@ export function calculaEstat(
     };
   }
 
-  const dies = Math.floor(
-    (ara.getTime() - new Date(ultim.measured_at).getTime()) / MS_PER_DIA,
-  );
+  const mesurat = new Date(ultim.measured_at);
+  const dies = diesCalendariCET(ara, mesurat);
+  const hores = horesEntre(ara, mesurat);
   const nivell = nivellGlobal(ultim.ph, ultim.clor);
-
-  const fragmentDies =
-    dies <= 0
-      ? "L'últim control s'ha fet avui"
-      : dies === 1
-        ? "Fa 1 dia de l'últim control"
-        : `Fa ${dies} dies de l'últim control`;
+  const fragmentDies = fragmentDiesCET(dies);
 
   // 🔴 Vermell: massa dies o valors fora de rang.
   if (dies > DIES_VERMELL || nivell === "fora") {
@@ -84,8 +81,8 @@ export function calculaEstat(
     };
   }
 
-  // 🟡 Groc: comença a fer dies o valors a tocar del límit.
-  if (dies > DIES_GROC || nivell === "limit") {
+  // 🟡 Groc: ja fa dies de la revisió o valors a tocar del límit.
+  if (hores > HORES_VERD || nivell === "limit") {
     const motiu =
       nivell === "limit"
         ? "algun valor està a tocar del límit recomanat"
@@ -99,7 +96,7 @@ export function calculaEstat(
     };
   }
 
-  // 🟢 Verd: tot al dia.
+  // 🟢 Verd: revisat fa menys de 24 h i valors correctes.
   return {
     color: "verd",
     emoji: "🟢",
