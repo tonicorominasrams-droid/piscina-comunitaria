@@ -31,8 +31,13 @@ type Control = {
   notes: string | null;
   fora_de_rang: boolean;
   created_by: string | null;
-  autor: { full_name: string | null; email: string | null } | null;
+  // PostgREST retorna la relació incrustada com a objecte (to-one) però, segons
+  // com infereixi la cardinalitat, de vegades la torna com a array d'un element.
+  // Acceptem totes dues formes perquè el nom de l'autor no quedi mai buit.
+  autor: Perfil | Perfil[] | null;
 };
+
+type Perfil = { full_name: string | null; email: string | null };
 
 const COLORS_RECOMANACIO = {
   bo: "bg-green-50 text-green-800 ring-green-200",
@@ -50,9 +55,10 @@ function formataData(iso: string) {
 
 /** Nom visible de qui ha fet un control (nom complet o, si no, part del correu). */
 function nomAutor(autor: Control["autor"]): string {
-  const nom = autor?.full_name?.trim();
+  const perfil = Array.isArray(autor) ? autor[0] : autor;
+  const nom = perfil?.full_name?.trim();
   if (nom) return nom;
-  const correu = autor?.email?.trim();
+  const correu = perfil?.email?.trim();
   if (correu) return correu.split("@")[0];
   return "—";
 }

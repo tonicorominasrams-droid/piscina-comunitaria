@@ -107,7 +107,23 @@ alter table public.controls
   add column if not exists aigua_omplerta    boolean not null default false,
   add column if not exists estat_depuradora  text,
   add column if not exists temperatura       numeric(4, 1),
-  add column if not exists codi_meteo        integer;
+  add column if not exists codi_meteo        integer,
+  add column if not exists created_by        uuid;
+
+-- Si la columna "created_by" s'ha afegit a posteriori (base de dades antiga),
+-- pot existir sense la clau forana cap a "profiles". Sense aquesta relació,
+-- PostgREST no pot resoldre l'incrustat profiles!created_by i la columna "Qui"
+-- de l'històric queda buida. La hi afegim si encara no hi és.
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint where conname = 'controls_created_by_fkey'
+  ) then
+    alter table public.controls
+      add constraint controls_created_by_fkey
+      foreign key (created_by) references public.profiles(id);
+  end if;
+end $$;
 
 do $$
 begin
