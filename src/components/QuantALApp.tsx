@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react";
 import { RANGS } from "@/lib/ranges";
 
-const VERSIO = "2026.1.005";
-const DATA_INICI_APP = "2025";
+const VERSIO = "2026.1.006";
 
 type Stats = {
   totalControls: number;
@@ -119,7 +118,7 @@ export default function QuantALApp({
                     Piscina Comunitària
                   </h2>
                   <p className="mt-0.5 text-sm text-white/75">
-                    Versió {VERSIO} · {DATA_INICI_APP}
+                    Versió {VERSIO}
                   </p>
                 </div>
               </div>
