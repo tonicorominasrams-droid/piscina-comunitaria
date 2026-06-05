@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { RANGS } from "@/lib/ranges";
 
-const VERSIO = "2026.1.006";
+const VERSIO = "2026.1.007";
 
 type Stats = {
   totalControls: number;
