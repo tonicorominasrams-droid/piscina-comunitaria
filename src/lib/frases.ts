@@ -1,4 +1,37 @@
 /**
+ * Frases divertides en català per quan la piscina està en perfecte estat
+ * (semàfor verd). Conviden els veïns a banyar-se i feliciten pel bon manteniment.
+ */
+export const FRASES_VERD: readonly string[] = [
+  "L'aigua és perfecta, llanceu-vos! 🏊‍♂️",
+  "La piscina està en forma, i vosaltres? 💪",
+  "Valors immaculats! L'únic que falta ara sou vosaltres. 🩱",
+  "pH i clor perfectes: la piscina és vostra, veïns! 🌊",
+  "Avui és dia de piscina. L'aigua ho confirma, els números ho diuen. ✅",
+  "La química és perfecta. Ara falta l'alegria dels veïns! 🎉",
+  "Tot a punt! L'aigua ja té ganes que us hi tireu. 💧",
+  "Control superat amb nota. La piscina mereix ser gaudida! 🌟",
+  "Gràcies al vostre esforç, l'água és cristal·lina. Aprofiteu-la! 💎",
+  "L'estiu crema i l'água fresca us espera. A refrescar-se! 🌞",
+  "Missió acomplerta: piscina en perfecte estat. Ara a gaudir! 🎯",
+  "Els veïns d'aquest bloc saben mantenir una piscina. Ara a nedar! 🥇",
+  "Ni les algues s'hi atreveixen avui. L'água és tota vostra. 🦠🚫",
+  "Control perfecte! Porteu les tovalloles, que l'água és ideal. 🏖️",
+  "La piscina us dóna la benvinguda: valors correctes i portes obertes. 🚪",
+  "El pH somriu, el clor aplaudeix. Saltem! 🤸",
+  "Avui la piscina és una bassa d'oli... però del bo! 🫧",
+  "Aigua cristal·lina, veïns contents. Així s'estima una piscina! 💙",
+  "Bocins de cel blau i piscina a punt. Quin dia per banyar-se! ☀️",
+  "La piscina us vol dir gràcies. Vosaltres, porteu-li companyia! 🙏",
+];
+
+/** Tria una frase aleatòria per al semàfor verd. */
+export function fraseVerda(): string {
+  const i = Math.floor(Math.random() * FRASES_VERD.length);
+  return FRASES_VERD[i];
+}
+
+/**
  * Frases divertides i originals en català per animar a fer el control de la
  * piscina. S'utilitzen als recordatoris automàtics (correu i notificació
  * push) i se'n tria una a l'atzar cada vegada.

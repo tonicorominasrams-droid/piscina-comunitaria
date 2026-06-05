@@ -4,18 +4,20 @@
  * Combina dos criteris, sempre calculats en hora de Madrid (CET/CEST):
  *   · La recència de l'últim control.
  *   · El nivell dels valors de l'últim control (correctes, límit o fora de rang).
+ *   · Si s'ha aplicat tractament correctiu (correcció de pH, clor o pastilles).
  *
- * Regles (la pitjor de les dues mana), segons l'especificació:
- *   🟢 Verd    → tots els valors dins de rang I últim control fa ≤ 24 hores.
- *   🟡 Groc    → últim control fa entre 1 i 4 dies O algun valor a tocar del límit.
- *   🔴 Vermell → últim control fa més de 4 dies O algun valor fora de rang.
- *
- * El color i el missatge deriven SEMPRE del mateix càlcul, de manera que la
- * recomanació que es mostra mai contradiu el color del semàfor.
+ * Regles (la pitjor de les dues mana):
+ *   🟢 Verd    → últim control fa ≤ 48 h I (valors dins de rang O s'ha
+ *                aplicat tractament correctiu).
+ *   🟡 Groc    → últim control fa entre 48 h i 4 dies O algun valor a tocar
+ *                del límit (sense tractament que ho justifiqui).
+ *   🔴 Vermell → últim control fa més de 4 dies O (valors fora de rang I
+ *                no s'ha aplicat cap tractament correctiu).
  */
 
 import { nivellGlobal } from "./ranges";
 import { diesCalendariCET, fragmentDiesCET, horesEntre } from "./temps";
+import { fraseVerda } from "./frases";
 
 export type ColorSemafor = "verd" | "groc" | "vermell";
 
@@ -29,7 +31,7 @@ export type EstatPiscina = {
 };
 
 /** Hores a partir de les quals deixa de ser "recent" (semàfor verd). */
-const HORES_VERD = 24;
+const HORES_VERD = 48;
 /** Dies a partir dels quals l'estat passa a vermell. */
 const DIES_VERMELL = 4;
 
@@ -37,6 +39,9 @@ type UltimControl = {
   measured_at: string;
   ph: number | null;
   clor: number | null;
+  ph_corregit?: boolean | null;
+  clor_afegit?: boolean | null;
+  pastilles_skimmer?: number | null;
 } | null;
 
 /**
@@ -66,10 +71,20 @@ export function calculaEstat(
   const nivell = nivellGlobal(ultim.ph, ultim.clor);
   const fragmentDies = fragmentDiesCET(dies);
 
-  // 🔴 Vermell: massa dies o valors fora de rang.
-  if (dies > DIES_VERMELL || nivell === "fora") {
+  // S'ha aplicat tractament correctiu durant aquest control?
+  const tractament = !!(
+    ultim.ph_corregit ||
+    ultim.clor_afegit ||
+    (ultim.pastilles_skimmer != null && ultim.pastilles_skimmer > 0)
+  );
+
+  // Si hi ha tractament, considerem els valors com a correctes a efectes del semàfor.
+  const nivellEfectiu = tractament ? "ok" : nivell;
+
+  // 🔴 Vermell: massa dies o valors fora de rang sense tractament.
+  if (dies > DIES_VERMELL || nivellEfectiu === "fora") {
     const motiu =
-      nivell === "fora"
+      nivellEfectiu === "fora"
         ? "els valors de l'aigua estan fora de rang"
         : "fa massa dies que no es revisa";
     return {
@@ -81,10 +96,10 @@ export function calculaEstat(
     };
   }
 
-  // 🟡 Groc: ja fa dies de la revisió o valors a tocar del límit.
-  if (hores > HORES_VERD || nivell === "limit") {
+  // 🟡 Groc: ja fa més de 48 h de la revisió o valors a tocar del límit.
+  if (hores > HORES_VERD || nivellEfectiu === "limit") {
     const motiu =
-      nivell === "limit"
+      nivellEfectiu === "limit"
         ? "algun valor està a tocar del límit recomanat"
         : "ja comença a fer dies de l'última revisió";
     return {
@@ -96,12 +111,12 @@ export function calculaEstat(
     };
   }
 
-  // 🟢 Verd: revisat fa menys de 24 h i valors correctes.
+  // 🟢 Verd: revisat fa menys de 48 h i valors correctes (o amb tractament aplicat).
   return {
     color: "verd",
     emoji: "🟢",
     titol: "Tot correcte",
-    missatge: `${fragmentDies} i els valors són correctes. La piscina està a punt!`,
+    missatge: fraseVerda(),
     diesSense: dies,
   };
 }

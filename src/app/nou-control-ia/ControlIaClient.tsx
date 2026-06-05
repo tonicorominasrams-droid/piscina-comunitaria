@@ -133,6 +133,13 @@ export default function ControlIaClient() {
             </p>
           </div>
 
+          <div className="flex items-start gap-3 rounded-lg bg-amber-50 px-4 py-3 ring-1 ring-amber-200">
+            <span className="mt-0.5 text-lg" aria-hidden>💡</span>
+            <p className="text-sm font-medium text-amber-800">
+              Fes la foto dels tubs sobre un fons blanc per obtenir millors resultats
+            </p>
+          </div>
+
           <input
             ref={inputRef}
             type="file"
@@ -279,6 +286,20 @@ export default function ControlIaClient() {
       {fase === "resultat" && (
         <div className="space-y-6">
           <Recomanacions ph={phFinal} clor={clorFinal} />
+
+          <div className="flex items-start gap-4 rounded-xl border-2 border-orange-300 bg-orange-50 px-5 py-4">
+            <span className="mt-0.5 text-3xl" aria-hidden>📋</span>
+            <div>
+              <p className="text-base font-bold text-orange-900">
+                Ara completa la resta de paràmetres i l&apos;estat de la bomba
+              </p>
+              <p className="mt-1 text-sm text-orange-800">
+                Els valors de pH i clor ja estan pre-omplerts. Recorda indicar
+                si has afegit pastilles, corregit el pH, afegit clor, i l&apos;estat
+                actual de la depuradora.
+              </p>
+            </div>
+          </div>
 
           <div className="space-y-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
             <div>

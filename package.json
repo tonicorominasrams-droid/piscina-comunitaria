@@ -1,6 +1,6 @@
 {
   "name": "piscina-comunitaria",
-  "version": "2026.1.002",
+  "version": "2026.1.004",
   "private": true,
   "description": "App de gestió de controls de la piscina comunitària (pH, clor i aspiració)",
   "scripts": {
