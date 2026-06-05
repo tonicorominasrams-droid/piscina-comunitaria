@@ -167,137 +167,258 @@ export default async function DashboardPage(props: {
           Encara no hi ha cap control registrat.
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
-          <table className="w-full min-w-[820px] text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-              <tr>
-                <th className="px-4 py-3">Data</th>
-                <th className="px-4 py-3">Qui</th>
-                <th className="px-4 py-3">Temps</th>
-                <th className="px-4 py-3">pH</th>
-                <th className="px-4 py-3">Clor (mg/L)</th>
-                <th className="px-4 py-3">Accions</th>
-                <th className="px-4 py-3">Depuradora</th>
-                <th className="px-4 py-3">Estat</th>
-                <th className="px-4 py-3">Notes</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {llista.map((c) => (
-                <tr key={c.id} className="hover:bg-slate-50">
-                  <td className="whitespace-nowrap px-4 py-3 text-slate-700">
-                    {formataData(c.measured_at)}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-slate-700">
-                    {nomAutor(c.autor)}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-slate-700">
-                    {c.codi_meteo !== null || c.temperatura !== null ? (
-                      (() => {
-                        const desc = descriuMeteo(c.codi_meteo);
-                        return (
-                          <span
-                            className="inline-flex items-center gap-1.5"
-                            title={desc.etiqueta}
-                          >
-                            <span className="text-base" aria-hidden>
-                              {desc.icona}
-                            </span>
-                            {c.temperatura !== null && (
-                              <span>{Math.round(c.temperatura)} °C</span>
-                            )}
-                          </span>
-                        );
-                      })()
-                    ) : (
-                      <span className="text-slate-400">—</span>
-                    )}
-                  </td>
-                  <td
-                    className={`px-4 py-3 font-medium ${
-                      phForaDeRang(c.ph) ? "text-red-600" : "text-slate-700"
-                    }`}
-                  >
-                    {c.ph ?? "—"}
-                  </td>
-                  <td
-                    className={`px-4 py-3 font-medium ${
-                      clorForaDeRang(c.clor) ? "text-red-600" : "text-slate-700"
-                    }`}
-                  >
-                    {c.clor ?? "—"}
-                  </td>
-                  <td className="px-4 py-3">
-                    {(() => {
-                      const accions = [
-                        c.pastilles_skimmer > 0 &&
-                          `${c.pastilles_skimmer} ${
-                            c.pastilles_skimmer === 1 ? "pastilla" : "pastilles"
-                          } a l'skimer`,
-                        c.ph_corregit && "pH corregit",
-                        c.clor_afegit && "Clor líquid o pols",
-                        c.aigua_omplerta && "Aigua afegida",
-                        c.aspiracio && "Neteja fons",
-                      ].filter(Boolean) as string[];
-                      return accions.length > 0 ? (
-                        <div className="flex flex-wrap gap-1">
-                          {accions.map((a) => (
+        <>
+          {/* Targetes per a mòbil */}
+          <div className="space-y-3 sm:hidden">
+            {llista.map((c) => (
+              <TarjetaControl key={c.id} control={c} />
+            ))}
+          </div>
+
+          {/* Taula per a tauleta i escriptori */}
+          <div className="hidden overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm sm:block">
+            <table className="w-full min-w-[820px] text-left text-sm">
+              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                <tr>
+                  <th className="px-4 py-3">Data</th>
+                  <th className="px-4 py-3">Qui</th>
+                  <th className="px-4 py-3">Temps</th>
+                  <th className="px-4 py-3">pH</th>
+                  <th className="px-4 py-3">Clor (mg/L)</th>
+                  <th className="px-4 py-3">Accions</th>
+                  <th className="px-4 py-3">Depuradora</th>
+                  <th className="px-4 py-3">Estat</th>
+                  <th className="px-4 py-3">Notes</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {llista.map((c) => (
+                  <tr key={c.id} className="hover:bg-slate-50">
+                    <td className="whitespace-nowrap px-4 py-3 text-slate-700">
+                      {formataData(c.measured_at)}
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-slate-700">
+                      {nomAutor(c.autor)}
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-slate-700">
+                      {c.codi_meteo !== null || c.temperatura !== null ? (
+                        (() => {
+                          const desc = descriuMeteo(c.codi_meteo);
+                          return (
                             <span
-                              key={a}
-                              className="inline-flex items-center rounded-full bg-aigua-50 px-2 py-0.5 text-xs font-medium text-aigua-700 ring-1 ring-aigua-100"
+                              className="inline-flex items-center gap-1.5"
+                              title={desc.etiqueta}
                             >
-                              ✓ {a}
+                              <span className="text-base" aria-hidden>
+                                {desc.icona}
+                              </span>
+                              {c.temperatura !== null && (
+                                <span>{Math.round(c.temperatura)} °C</span>
+                              )}
                             </span>
-                          ))}
-                        </div>
+                          );
+                        })()
                       ) : (
                         <span className="text-slate-400">—</span>
-                      );
-                    })()}
-                  </td>
-                  <td className="px-4 py-3">
-                    {(() => {
-                      const opcio = opcioDepuradora(c.estat_depuradora);
-                      return opcio ? (
-                        <span
-                          className="inline-flex items-center gap-2"
-                          title={opcio.descripcio}
-                        >
+                      )}
+                    </td>
+                    <td
+                      className={`px-4 py-3 font-medium ${
+                        phForaDeRang(c.ph) ? "text-red-600" : "text-slate-700"
+                      }`}
+                    >
+                      {c.ph ?? "—"}
+                    </td>
+                    <td
+                      className={`px-4 py-3 font-medium ${
+                        clorForaDeRang(c.clor) ? "text-red-600" : "text-slate-700"
+                      }`}
+                    >
+                      {c.clor ?? "—"}
+                    </td>
+                    <td className="px-4 py-3">
+                      {(() => {
+                        const accions = [
+                          c.pastilles_skimmer > 0 &&
+                            `${c.pastilles_skimmer} ${
+                              c.pastilles_skimmer === 1 ? "pastilla" : "pastilles"
+                            } a l'skimer`,
+                          c.ph_corregit && "pH corregit",
+                          c.clor_afegit && "Clor líquid o pols",
+                          c.aigua_omplerta && "Aigua afegida",
+                          c.aspiracio && "Neteja fons",
+                        ].filter(Boolean) as string[];
+                        return accions.length > 0 ? (
+                          <div className="flex flex-wrap gap-1">
+                            {accions.map((a) => (
+                              <span
+                                key={a}
+                                className="inline-flex items-center rounded-full bg-aigua-50 px-2 py-0.5 text-xs font-medium text-aigua-700 ring-1 ring-aigua-100"
+                              >
+                                ✓ {a}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-slate-400">—</span>
+                        );
+                      })()}
+                    </td>
+                    <td className="px-4 py-3">
+                      {(() => {
+                        const opcio = opcioDepuradora(c.estat_depuradora);
+                        return opcio ? (
                           <span
-                            className={`h-4 w-4 flex-shrink-0 rounded-full border ${opcio.swatch}`}
-                            aria-hidden
-                          />
-                          <span className="text-slate-700">
-                            {opcio.etiqueta}
+                            className="inline-flex items-center gap-2"
+                            title={opcio.descripcio}
+                          >
+                            <span
+                              className={`h-4 w-4 flex-shrink-0 rounded-full border ${opcio.swatch}`}
+                              aria-hidden
+                            />
+                            <span className="text-slate-700">
+                              {opcio.etiqueta}
+                            </span>
                           </span>
+                        ) : (
+                          <span className="text-slate-400">—</span>
+                        );
+                      })()}
+                    </td>
+                    <td className="px-4 py-3">
+                      {c.fora_de_rang ? (
+                        <span className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-700">
+                          Fora de rang
                         </span>
                       ) : (
-                        <span className="text-slate-400">—</span>
-                      );
-                    })()}
-                  </td>
-                  <td className="px-4 py-3">
-                    {c.fora_de_rang ? (
-                      <span className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-700">
-                        Fora de rang
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700">
-                        Correcte
-                      </span>
-                    )}
-                  </td>
-                  <td className="max-w-xs px-4 py-3 text-slate-500">
-                    {c.notes || "—"}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                        <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700">
+                          Correcte
+                        </span>
+                      )}
+                    </td>
+                    <td className="max-w-xs px-4 py-3 text-slate-500">
+                      {c.notes || "—"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
       <FabNouControl />
+    </div>
+  );
+}
+
+/** Targeta de resum d'un control per a la vista mòbil. */
+function TarjetaControl({ control: c }: { control: Control }) {
+  const opcio = opcioDepuradora(c.estat_depuradora);
+  const meteo =
+    c.codi_meteo !== null || c.temperatura !== null
+      ? descriuMeteo(c.codi_meteo)
+      : null;
+  const accions = [
+    c.pastilles_skimmer > 0 &&
+      `${c.pastilles_skimmer} ${
+        c.pastilles_skimmer === 1 ? "pastilla" : "pastilles"
+      } a l'skimer`,
+    c.ph_corregit && "pH corregit",
+    c.clor_afegit && "Clor líquid o pols",
+    c.aigua_omplerta && "Aigua afegida",
+    c.aspiracio && "Neteja fons",
+  ].filter(Boolean) as string[];
+
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+      {/* Capçalera: data, qui i estat */}
+      <div className="mb-3 flex items-start justify-between gap-2">
+        <div>
+          <p className="text-sm font-semibold text-slate-900">
+            {formataData(c.measured_at)}
+          </p>
+          <p className="mt-0.5 text-xs text-slate-500">{nomAutor(c.autor)}</p>
+        </div>
+        {c.fora_de_rang ? (
+          <span className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-700">
+            Fora de rang
+          </span>
+        ) : (
+          <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700">
+            Correcte
+          </span>
+        )}
+      </div>
+
+      {/* Valors principals (grans i amb color) */}
+      <div className="mb-3 flex gap-3">
+        <div className="flex-1 rounded-lg bg-slate-50 px-3 py-2">
+          <p className="text-[10px] font-medium uppercase tracking-wide text-slate-400">
+            pH
+          </p>
+          <p
+            className={`text-2xl font-bold ${
+              phForaDeRang(c.ph) ? "text-red-600" : "text-green-700"
+            }`}
+          >
+            {c.ph ?? "—"}
+          </p>
+        </div>
+        <div className="flex-1 rounded-lg bg-slate-50 px-3 py-2">
+          <p className="text-[10px] font-medium uppercase tracking-wide text-slate-400">
+            Clor mg/L
+          </p>
+          <p
+            className={`text-2xl font-bold ${
+              clorForaDeRang(c.clor) ? "text-red-600" : "text-green-700"
+            }`}
+          >
+            {c.clor ?? "—"}
+          </p>
+        </div>
+      </div>
+
+      {/* Depuradora i temperatura */}
+      <div className="flex items-center justify-between text-xs text-slate-500">
+        {opcio ? (
+          <span className="inline-flex items-center gap-1.5">
+            <span
+              className={`h-3 w-3 flex-shrink-0 rounded-full border ${opcio.swatch}`}
+              aria-hidden
+            />
+            <span>{opcio.etiqueta}</span>
+          </span>
+        ) : (
+          <span>—</span>
+        )}
+        {meteo && (
+          <span className="inline-flex items-center gap-1">
+            <span aria-hidden>{meteo.icona}</span>
+            {c.temperatura !== null && (
+              <span>{Math.round(c.temperatura)} °C</span>
+            )}
+          </span>
+        )}
+      </div>
+
+      {/* Accions */}
+      {accions.length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-1">
+          {accions.map((a) => (
+            <span
+              key={a}
+              className="inline-flex items-center rounded-full bg-aigua-50 px-2 py-0.5 text-xs font-medium text-aigua-700 ring-1 ring-aigua-100"
+            >
+              ✓ {a}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {c.notes && (
+        <p className="mt-2 text-xs text-slate-500">📝 {c.notes}</p>
+      )}
     </div>
   );
 }

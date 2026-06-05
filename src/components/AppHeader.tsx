@@ -136,6 +136,7 @@ export default function AppHeader({ nomUsuari, esAdmin, actiu }: Props) {
             >
               Estadístiques
             </Link>
+            <QuantALApp className={classesEnllac(false)} />
           </nav>
 
           <div className="mt-3 flex flex-col gap-3 border-t border-slate-200 pt-3">
@@ -145,7 +146,6 @@ export default function AppHeader({ nomUsuari, esAdmin, actiu }: Props) {
                 {esAdmin ? "Administrador/a" : "Veí/Veïna"}
               </p>
             </div>
-            <QuantALApp className={classesEnllac(false)} />
             <LogoutButton />
           </div>
         </div>

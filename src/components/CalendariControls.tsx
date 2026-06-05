@@ -117,7 +117,11 @@ export default function CalendariControls({
         <div className="flex items-center gap-3 text-xs text-slate-500">
           <span className="inline-flex items-center gap-1.5">
             <span className="h-3 w-3 rounded bg-green-500" aria-hidden />
-            Amb control
+            Correcte / Corregit
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-3 w-3 rounded bg-red-500" aria-hidden />
+            Fora de rang
           </span>
           <span className="inline-flex items-center gap-1.5">
             <span className="h-3 w-3 rounded bg-slate-100 ring-1 ring-slate-200" aria-hidden />
@@ -139,18 +143,20 @@ export default function CalendariControls({
           if (!d) return <div key={`buit-${i}`} />;
 
           const clau = clauDia(d);
+          const controlsDia = perDia.get(clau) ?? [];
           const teControl = perDia.has(clau);
           const esAvui = clau === avuiClau;
           const esSeleccionat = clau === seleccio;
-          const quants = perDia.get(clau)?.length ?? 0;
-          const algunForaRang = (perDia.get(clau) ?? []).some(
-            (c) => c.fora_de_rang,
+          const quants = controlsDia.length;
+          const algunForaRang = controlsDia.some((c) => c.fora_de_rang);
+          const algunCorregit = controlsDia.some(
+            (c) => c.ph_corregit || c.clor_afegit || c.pastilles_skimmer > 0,
           );
 
           const base =
             "relative flex aspect-square flex-col items-center justify-center rounded-lg text-sm transition";
           const colors = teControl
-            ? algunForaRang
+            ? algunForaRang && !algunCorregit
               ? "bg-red-500 text-white hover:bg-red-600"
               : "bg-green-500 text-white hover:bg-green-600"
             : "bg-slate-100 text-slate-400";

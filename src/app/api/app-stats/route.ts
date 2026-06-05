@@ -5,11 +5,7 @@ export async function GET() {
   try {
     const supabase = createServiceClient();
 
-    const [
-      { count: totalControls },
-      { count: totalVeins },
-      { data: primer },
-    ] = await Promise.all([
+    const [controlsResult, veinsResult, primerResult] = await Promise.all([
       supabase.from("controls").select("*", { count: "exact", head: true }),
       supabase.from("profiles").select("*", { count: "exact", head: true }),
       supabase
@@ -20,9 +16,16 @@ export async function GET() {
         .maybeSingle(),
     ]);
 
+    if (controlsResult.error || veinsResult.error) {
+      return NextResponse.json(
+        { totalControls: 0, totalVeins: 0, diesActiva: 0 },
+        { status: 500 },
+      );
+    }
+
     let diesActiva = 0;
-    if (primer?.measured_at) {
-      const primerDia = new Date(primer.measured_at);
+    if (primerResult.data?.measured_at) {
+      const primerDia = new Date(primerResult.data.measured_at);
       const ara = new Date();
       diesActiva = Math.max(
         0,
@@ -31,8 +34,8 @@ export async function GET() {
     }
 
     return NextResponse.json({
-      totalControls: totalControls ?? 0,
-      totalVeins: totalVeins ?? 0,
+      totalControls: controlsResult.count ?? 0,
+      totalVeins: veinsResult.count ?? 0,
       diesActiva,
     });
   } catch {

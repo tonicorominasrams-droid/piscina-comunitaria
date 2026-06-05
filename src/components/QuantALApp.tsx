@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { RANGS } from "@/lib/ranges";
 
-const VERSIO = "2026.1.004";
+const VERSIO = "2026.1.005";
 const DATA_INICI_APP = "2025";
 
 type Stats = {
@@ -51,7 +51,10 @@ export default function QuantALApp({
     if (stats) return;
     setCarregant(true);
     fetch("/api/app-stats")
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error("error");
+        return r.json();
+      })
       .then((d: Stats) => setStats(d))
       .catch(() => setStats(null))
       .finally(() => setCarregant(false));
@@ -185,13 +188,7 @@ export default function QuantALApp({
 
               {/* Peu */}
               <div className="border-t border-slate-100 pt-4 text-center">
-                <a
-                  href="mailto:tcorominas@letslab.com"
-                  className="text-sm font-medium text-aigua-600 hover:underline"
-                >
-                  tcorominas@letslab.com
-                </a>
-                <p className="mt-1 text-xs text-slate-400">
+                <p className="text-xs text-slate-400">
                   © 2026 Toni Corominas. Tots els drets reservats.
                 </p>
               </div>
